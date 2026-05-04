@@ -40,8 +40,9 @@ export function normalizeUrl(raw: string | undefined | null): string {
 
   const protocol = parsed.protocol.toLowerCase();
   if (protocol !== "http:" && protocol !== "https:") {
-    // chrome://, file://, about:, extension:, etc — leave as-is, lowercased
-    return `${protocol}${parsed.pathname || ""}${parsed.search || ""}`.toLowerCase();
+    // chrome://, file://, about:, extension:, etc — return the full href
+    // lowercased so we don't accidentally drop the host portion.
+    return parsed.href.toLowerCase();
   }
 
   const host = parsed.hostname.toLowerCase().replace(STRIP_HOST_PREFIX, "");
