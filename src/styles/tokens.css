@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: 252 252 253;
+    --surface-muted: 244 244 247;
+    --surface-subtle: 234 235 240;
+    --ink: 18 18 22;
+    --ink-muted: 82 84 94;
+    --ink-faint: 138 140 152;
+    --accent: 90 84 220;
+    --accent-soft: 235 233 252;
+    --border: 225 226 232;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: 14 14 18;
+      --surface-muted: 22 22 28;
+      --surface-subtle: 32 33 40;
+      --ink: 240 240 244;
+      --ink-muted: 170 172 184;
+      --ink-faint: 110 112 124;
+      --accent: 142 134 255;
+      --accent-soft: 40 36 78;
+      --border: 44 45 54;
+    }
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    border-color: rgb(var(--border));
+  }
+
+  ::selection {
+    background: rgb(var(--accent-soft));
+    color: rgb(var(--ink));
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-surface;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--border));
+    border-radius: 8px;
+  }
+}
