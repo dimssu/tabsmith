@@ -27,7 +27,14 @@ export default defineManifest({
     "storage",
     "sidePanel",
     "scripting",
+    "sessions",
   ],
+  commands: {
+    "open-command-palette": {
+      suggested_key: { default: "Ctrl+K", mac: "Command+K" },
+      description: "Open Tabsmith command palette",
+    },
+  },
   host_permissions: ["<all_urls>"],
   icons: {
     16: "src/assets/icon-16.png",

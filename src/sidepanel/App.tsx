@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { useBroadcast } from "@/hooks/useBroadcast";
+import { CommandPalette } from "@/components/CommandPalette";
 import { Header } from "./Header";
 import { SuggestionsList } from "./SuggestionsList";
 import { CurrentNote } from "./CurrentNote";
@@ -38,10 +39,30 @@ export function App() {
     [refreshNonce, windowId],
   );
 
+  // Command palette state
+  const [paletteOpen, setPaletteOpen] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("palette") === "1";
+  });
+
+  // Local keyboard shortcut (Cmd/Ctrl+K) — also responds to the
+  // chrome.commands trigger via the palette:open broadcast.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   useBroadcast((msg) => {
     if (msg.type === "suggestions:changed" || msg.type === "reminders:changed") {
       refresh();
     }
+    if (msg.type === "palette:open") setPaletteOpen(true);
   });
 
   const onAnalyze = useCallback(async () => {
@@ -94,20 +115,36 @@ export function App() {
         ) : null}
       </main>
 
-      <footer className="px-4 py-3 border-t border-border text-[11px] text-ink-faint flex items-center justify-between">
-        <span>
+      <footer className="px-4 py-3 border-t border-border text-[11px] text-ink-faint flex items-center justify-between gap-2">
+        <span className="truncate">
           Tabsmith · 100% on-device
           {windowId !== undefined ? (
             <span className="ml-2 opacity-60">· window #{windowId}</span>
           ) : null}
         </span>
-        <button
-          className="text-ink-muted hover:text-ink"
-          onClick={() => chrome.runtime.openOptionsPage()}
-        >
-          Options
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            className="text-ink-muted hover:text-ink inline-flex items-center gap-1"
+            onClick={() => setPaletteOpen(true)}
+            title="Open command palette"
+          >
+            <kbd className="border border-border rounded px-1">⌘K</kbd>
+            Search
+          </button>
+          <button
+            className="text-ink-muted hover:text-ink"
+            onClick={() => chrome.runtime.openOptionsPage()}
+          >
+            Options
+          </button>
+        </div>
       </footer>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        {...(windowId !== undefined ? { windowId } : {})}
+      />
     </div>
   );
 }

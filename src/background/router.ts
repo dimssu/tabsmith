@@ -5,13 +5,14 @@ import {
   SuggestionsRepo,
   driver,
 } from "@/storage";
-import { normalizeUrl } from "@/engine";
+import { normalizeUrl, rankAll } from "@/engine";
 import type {
   CurrentTab,
   ExportPayload,
   GroupSummary,
   Message,
   Response,
+  SearchHit,
 } from "@/messaging/contracts";
 import { broadcast } from "@/messaging/client";
 import { applySuggestion, analyzeFullWindow, dismissSuggestion } from "./suggest";
@@ -95,6 +96,19 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
 
     case "groups:listForCurrentWindow":
       return (await listGroupsForCurrentWindow()) as Response<M>;
+
+    case "groups:rename":
+      await chrome.tabGroups.update(msg.groupId, { title: msg.title });
+      return { ok: true } as Response<M>;
+
+    case "groups:recolor":
+      await chrome.tabGroups.update(msg.groupId, {
+        color: msg.color as chrome.tabGroups.ColorEnum,
+      });
+      return { ok: true } as Response<M>;
+
+    case "search:everything":
+      return (await searchEverything(msg.query, msg.windowId, msg.limit)) as Response<M>;
 
     case "tabs:current":
       return (await getCurrentTab()) as Response<M>;
@@ -240,6 +254,173 @@ async function focusOrOpen(url: string): Promise<number> {
   }
   const opened = await chrome.tabs.create({ url, active: true });
   return opened.id ?? -1;
+}
+
+async function searchEverything(
+  query: string,
+  windowId?: number,
+  limit = 30,
+): Promise<SearchHit[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const [tabs, notes, reminders, recentlyClosed] = await Promise.all([
+    chrome.tabs.query({}),
+    NotesRepo.list(),
+    RemindersRepo.list(),
+    chrome.sessions
+      ? chrome.sessions.getRecentlyClosed({ maxResults: 25 }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+
+  const hits: SearchHit[] = [];
+
+  // Tabs — current window first, then others. We rank inside each bucket.
+  const ownedTabs = windowId !== undefined
+    ? tabs.filter((t) => t.windowId === windowId)
+    : tabs;
+  const otherTabs = windowId !== undefined
+    ? tabs.filter((t) => t.windowId !== windowId)
+    : [];
+
+  for (const bucket of [ownedTabs, otherTabs]) {
+    const ranked = rankAll(
+      trimmed,
+      bucket.map((t) => ({
+        title: t.title ?? "",
+        url: t.url ?? "",
+      })),
+      limit,
+    );
+    for (const r of ranked) {
+      const original = bucket.find(
+        (t) => (t.title ?? "") === r.item.title && (t.url ?? "") === r.item.url,
+      );
+      if (!original?.url) continue;
+      hits.push({
+        kind: "tab",
+        title: r.item.title || original.url,
+        url: original.url,
+        ...(original.id !== undefined ? { tabId: original.id } : {}),
+        ...(original.windowId !== undefined ? { windowId: original.windowId } : {}),
+        score: r.score,
+        subtitle:
+          original.windowId === windowId
+            ? new URL(original.url).hostname
+            : `Other window · ${new URL(original.url).hostname}`,
+      });
+    }
+  }
+
+  // Notes — searched against title (last URL segment) + body.
+  const noteScored = rankAll(
+    trimmed,
+    notes.map((n) => ({
+      title: lastSegment(n.url) || n.url,
+      url: n.url,
+      body: n.body,
+    })),
+    limit,
+  );
+  for (const r of noteScored) {
+    const original = notes.find((n) => n.url === r.item.url);
+    if (!original) continue;
+    hits.push({
+      kind: "note",
+      title: r.item.title,
+      url: original.url,
+      score: r.score * 0.95, // gentle bias toward live tabs
+      excerpt: original.body.slice(0, 160),
+      subtitle: "Note",
+    });
+  }
+
+  // Reminders.
+  const reminderScored = rankAll(
+    trimmed,
+    reminders.map((r) => ({
+      title: r.titleHint ?? "Reminder",
+      url: r.url,
+      body: r.note ?? "",
+    })),
+    limit,
+  );
+  for (const r of reminderScored) {
+    const original = reminders.find(
+      (rem) => rem.url === r.item.url && (rem.titleHint ?? "Reminder") === r.item.title,
+    );
+    if (!original) continue;
+    hits.push({
+      kind: "reminder",
+      title: r.item.title,
+      url: original.url,
+      score: r.score * 0.9,
+      subtitle: original.fired
+        ? "Reminder · fired"
+        : `Reminder · ${new Date(original.fireAt).toLocaleString()}`,
+    });
+  }
+
+  // Recently closed tabs (chrome.sessions). May be empty if permission missing.
+  const closedTabs: { title: string; url: string; sessionId?: string }[] = [];
+  for (const session of recentlyClosed ?? []) {
+    if (session.tab && session.tab.url) {
+      closedTabs.push({
+        title: session.tab.title ?? session.tab.url,
+        url: session.tab.url,
+        ...(session.tab.sessionId ? { sessionId: session.tab.sessionId } : {}),
+      });
+    } else if (session.window?.tabs) {
+      for (const t of session.window.tabs) {
+        if (t.url) {
+          closedTabs.push({
+            title: t.title ?? t.url,
+            url: t.url,
+            ...(t.sessionId ? { sessionId: t.sessionId } : {}),
+          });
+        }
+      }
+    }
+  }
+  const closedScored = rankAll(trimmed, closedTabs, limit);
+  for (const r of closedScored) {
+    const original = closedTabs.find(
+      (c) => c.title === r.item.title && c.url === r.item.url,
+    );
+    if (!original) continue;
+    hits.push({
+      kind: "closed",
+      title: r.item.title,
+      url: original.url,
+      ...(original.sessionId ? { sessionId: original.sessionId } : {}),
+      score: r.score * 0.7,
+      subtitle: "Recently closed",
+    });
+  }
+
+  // Final blended ranking + dedupe by url+kind so the same page doesn't
+  // appear as both a Tab and a Note.
+  hits.sort((a, b) => b.score - a.score);
+  const seen = new Set<string>();
+  const out: SearchHit[] = [];
+  for (const h of hits) {
+    const key = `${h.kind}:${h.url}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(h);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function lastSegment(url: string): string {
+  try {
+    const u = new URL(url);
+    const segs = u.pathname.split("/").filter(Boolean);
+    return segs[segs.length - 1] ?? u.hostname;
+  } catch {
+    return url;
+  }
 }
 
 async function exportAll(): Promise<ExportPayload> {

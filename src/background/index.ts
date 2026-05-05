@@ -182,3 +182,23 @@ chrome.windows.onRemoved.addListener(async (closedWindowId) => {
 // --- Notifications -----------------------------------------------------------
 
 listenForReminderEvents();
+
+// --- Keyboard shortcuts ------------------------------------------------------
+
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command !== "open-command-palette") return;
+  const windowId = tab?.windowId;
+  if (windowId === undefined) return;
+  // Open the side panel and tell it to show the palette via a broadcast.
+  try {
+    await chrome.sidePanel.setOptions({
+      ...(tab?.id !== undefined ? { tabId: tab.id } : {}),
+      path: `src/sidepanel/index.html?windowId=${windowId}&palette=1`,
+      enabled: true,
+    });
+    await chrome.sidePanel.open({ windowId });
+  } catch {
+    await chrome.sidePanel.open({ windowId }).catch(() => {});
+  }
+  broadcast({ type: "palette:open" } as never);
+});

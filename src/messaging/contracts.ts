@@ -17,8 +17,11 @@ export type Message =
   | { type: "reminders:list" }
   | { type: "reminders:delete"; id: string }
   | { type: "groups:listForCurrentWindow" }
+  | { type: "groups:rename"; groupId: number; title: string }
+  | { type: "groups:recolor"; groupId: number; color: string }
   | { type: "tabs:current" }
   | { type: "tabs:focusOrOpen"; url: string }
+  | { type: "search:everything"; query: string; windowId?: number; limit?: number }
   | { type: "prefs:get" }
   | { type: "prefs:update"; patch: Partial<Preferences> }
   | { type: "data:export" }
@@ -39,8 +42,11 @@ export type Response<M extends Message> =
   : M extends { type: "reminders:list" } ? Reminder[]
   : M extends { type: "reminders:delete" } ? { ok: true }
   : M extends { type: "groups:listForCurrentWindow" } ? GroupSummary[]
+  : M extends { type: "groups:rename" } ? { ok: true }
+  : M extends { type: "groups:recolor" } ? { ok: true }
   : M extends { type: "tabs:current" } ? CurrentTab | null
   : M extends { type: "tabs:focusOrOpen" } ? { tabId: number }
+  : M extends { type: "search:everything" } ? SearchHit[]
   : M extends { type: "prefs:get" } ? Preferences
   : M extends { type: "prefs:update" } ? Preferences
   : M extends { type: "data:export" } ? ExportPayload
@@ -65,6 +71,23 @@ export interface CurrentTab {
   favIconUrl?: string;
 }
 
+export type SearchHitKind = "tab" | "note" | "reminder" | "closed";
+
+export interface SearchHit {
+  kind: SearchHitKind;
+  url: string;
+  title: string;
+  subtitle?: string;
+  // For tabs / closed: ids needed to focus or restore
+  tabId?: number;
+  windowId?: number;
+  sessionId?: string;
+  // Score in [0, 1] for ranking
+  score: number;
+  // Optional preview text (note body excerpt)
+  excerpt?: string;
+}
+
 export interface ExportPayload {
   exportedAt: number;
   schemaVersion: number;
@@ -78,6 +101,7 @@ export type Broadcast =
   | { type: "suggestions:changed" }
   | { type: "notes:changed"; url: string }
   | { type: "reminders:changed" }
-  | { type: "prefs:changed" };
+  | { type: "prefs:changed" }
+  | { type: "palette:open" };
 
 export const BROADCAST_CHANNEL = "tabsmith-broadcast";

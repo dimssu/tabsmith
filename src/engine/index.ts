@@ -20,3 +20,9 @@ export {
   fingerprintCluster,
   type NewGroupSuggestion,
 } from "./suggest";
+export {
+  scoreMatch,
+  rankAll,
+  type Searchable,
+  type ScoredSearchable,
+} from "./search";
