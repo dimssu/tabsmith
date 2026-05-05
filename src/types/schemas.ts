@@ -40,6 +40,10 @@ export const SuggestionSchema = z.object({
   id: z.string().min(1),
   kind: SuggestionKindSchema,
   createdAt: z.number().int().nonnegative(),
+  // Window that this suggestion concerns. Chrome groups can't span windows,
+  // so every suggestion is anchored to one. Optional for back-compat with
+  // suggestions written before this field existed.
+  windowId: z.number().int().optional(),
   // Tabs that this suggestion concerns
   tabIds: z.array(z.number().int()).default([]),
   // For "assign": the existing group to merge into

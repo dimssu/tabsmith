@@ -14,10 +14,19 @@ export function App() {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const refresh = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
+  // Each side panel instance is anchored to a window. Resolve once and pass
+  // it on every suggestion-related call so multi-window users get the right
+  // suggestions per panel.
+  const win = useAsync(() => chrome.windows.getCurrent(), []);
+  const windowId = win.data?.id;
+
   const current = useAsync(() => send({ type: "tabs:current" }), [refreshNonce]);
   const suggestions = useAsync(
-    () => send({ type: "suggestions:list" }),
-    [refreshNonce],
+    () =>
+      windowId !== undefined
+        ? send({ type: "suggestions:list", windowId })
+        : Promise.resolve([]),
+    [refreshNonce, windowId],
   );
 
   useBroadcast((msg) => {
@@ -27,9 +36,10 @@ export function App() {
   });
 
   const onAnalyze = useCallback(async () => {
-    await send({ type: "suggestions:analyzeNow" });
+    if (windowId === undefined) return;
+    await send({ type: "suggestions:analyzeNow", windowId });
     refresh();
-  }, [refresh]);
+  }, [refresh, windowId]);
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">

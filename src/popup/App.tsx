@@ -207,7 +207,11 @@ function RemindSection({ url, title, onBack }: { url: string; title: string; onB
 
 function GroupSection({ onBack }: { onBack: () => void }) {
   const suggestions = useAsync(async () => {
-    const all = await send({ type: "suggestions:list" });
+    const win = await chrome.windows.getCurrent();
+    const all =
+      win.id !== undefined
+        ? await send({ type: "suggestions:list", windowId: win.id })
+        : [];
     return all.filter((s) => s.kind === "assign");
   }, []);
 

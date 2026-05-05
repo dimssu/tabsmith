@@ -6,6 +6,8 @@ import { analyzeNewTab, analyzeFullWindow } from "./suggest";
 import { handleAlarm, handleNotificationClick } from "./reminders";
 import { installRouter } from "./router";
 import { refreshBadge } from "./badge";
+import { GroupMetaRepo, SuggestionsRepo } from "@/storage";
+import { broadcast } from "@/messaging/client";
 
 const ANALYZE_DEBOUNCE_MS = 1500;
 const FULL_ANALYZE_ALARM = "tabsmith:full-analyze";
@@ -74,8 +76,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 async function syncCurrent(): Promise<void> {
   try {
-    const win = await chrome.windows.getCurrent();
-    if (win.id !== undefined) await syncGroupsForWindow(win.id);
+    const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+    await Promise.all(
+      windows.map((w) => (w.id !== undefined ? syncGroupsForWindow(w.id) : Promise.resolve())),
+    );
   } catch {
     // ignore — race with window close
   }
@@ -97,10 +101,44 @@ async function schedulePeriodicAnalyze(): Promise<void> {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === FULL_ANALYZE_ALARM) {
     await syncCurrent();
-    await analyzeFullWindow();
+    // Analyze every open window independently so each one gets its own
+    // window-scoped suggestions, regardless of which window is focused.
+    try {
+      const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+      await Promise.all(
+        windows
+          .filter((w) => w.id !== undefined)
+          .map((w) => analyzeFullWindow(w.id!)),
+      );
+    } catch {
+      // ignore — windows may close mid-pass
+    }
     return;
   }
   await handleAlarm(alarm);
+});
+
+// --- Window lifecycle --------------------------------------------------------
+
+chrome.windows.onRemoved.addListener(async (closedWindowId) => {
+  // GC any suggestions and group metadata that were anchored to the closed
+  // window, otherwise stale items linger in the side panel of other windows.
+  const suggestions = await SuggestionsRepo.list();
+  let removed = 0;
+  for (const s of suggestions) {
+    if (s.windowId === closedWindowId) {
+      await SuggestionsRepo.delete(s.id);
+      removed++;
+    }
+  }
+  const groups = await GroupMetaRepo.list();
+  for (const g of groups) {
+    if (g.windowId === closedWindowId) await GroupMetaRepo.delete(g.groupId);
+  }
+  if (removed > 0) {
+    broadcast({ type: "suggestions:changed" });
+    await refreshBadge();
+  }
 });
 
 // --- Notifications -----------------------------------------------------------

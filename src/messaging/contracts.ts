@@ -5,10 +5,10 @@ import type { Note, Reminder, Suggestion, Preferences } from "@/types";
 
 export type Message =
   | { type: "ping" }
-  | { type: "suggestions:list" }
+  | { type: "suggestions:list"; windowId?: number }
   | { type: "suggestions:accept"; id: string }
   | { type: "suggestions:dismiss"; id: string }
-  | { type: "suggestions:analyzeNow" }
+  | { type: "suggestions:analyzeNow"; windowId?: number }
   | { type: "notes:get"; url: string }
   | { type: "notes:upsert"; url: string; body: string; pinned?: boolean }
   | { type: "notes:list" }

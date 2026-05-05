@@ -35,8 +35,17 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
     case "ping":
       return { ok: true } as Response<M>;
 
-    case "suggestions:list":
-      return (await SuggestionsRepo.pending()) as Response<M>;
+    case "suggestions:list": {
+      const all = await SuggestionsRepo.pending();
+      const targetWindowId = await resolveWindowId(msg.windowId);
+      // Older suggestions written before the windowId field are kept visible
+      // (windowId === undefined) so users don't lose them across the upgrade;
+      // anything tagged with a different window is filtered out.
+      const filtered = all.filter(
+        (s) => s.windowId === undefined || s.windowId === targetWindowId,
+      );
+      return filtered as Response<M>;
+    }
 
     case "suggestions:accept":
       return (await applySuggestion(msg.id)) as Response<M>;
@@ -46,7 +55,8 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
       return { ok: true } as Response<M>;
 
     case "suggestions:analyzeNow": {
-      const created = await analyzeFullWindow();
+      const targetWindowId = await resolveWindowId(msg.windowId);
+      const created = await analyzeFullWindow(targetWindowId);
       return { created } as Response<M>;
     }
 
@@ -123,6 +133,16 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
       return { ok: true } as Response<M>;
   }
   throw new Error(`Unknown message: ${(msg as { type: string }).type}`);
+}
+
+async function resolveWindowId(hint: number | undefined): Promise<number | undefined> {
+  if (hint !== undefined) return hint;
+  try {
+    const win = await chrome.windows.getLastFocused({ windowTypes: ["normal"] });
+    return win.id;
+  } catch {
+    return undefined;
+  }
 }
 
 async function listGroupsForCurrentWindow(): Promise<GroupSummary[]> {

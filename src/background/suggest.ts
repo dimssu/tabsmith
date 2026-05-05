@@ -14,14 +14,18 @@ const SUPPRESSION_WINDOW_MS = 1000 * 60 * 60 * 24; // 24 hours
 export async function analyzeNewTab(tab: TabLike): Promise<void> {
   if (!tab.url || !tab.id) return;
   if (!tab.url.startsWith("http://") && !tab.url.startsWith("https://")) return;
+  if (tab.windowId === undefined) return;
 
   const prefs = await PreferencesRepo.get();
-  const groups = await GroupMetaRepo.list();
+  // Chrome tab groups never span windows, so an "add to existing group"
+  // suggestion only makes sense if the candidate group lives in the same
+  // window as the new tab.
+  const groups = (await GroupMetaRepo.list()).filter(
+    (g) => g.windowId === tab.windowId && g.groupId !== tab.groupId,
+  );
   if (groups.length === 0) return;
 
-  // Don't suggest assigning to the group the tab is already in
-  const candidates = groups.filter((g) => g.groupId !== tab.groupId);
-  const result = suggestExistingGroup(tab, candidates);
+  const result = suggestExistingGroup(tab, groups);
   if (!result || result.score < prefs.assignThreshold) return;
 
   const fingerprint = `assign|${tab.id}|${result.candidate.groupId}`;
@@ -42,6 +46,7 @@ export async function analyzeNewTab(tab: TabLike): Promise<void> {
 
   await SuggestionsRepo.create({
     kind: "assign",
+    windowId: tab.windowId,
     tabIds: [tab.id],
     targetGroupId: result.candidate.groupId,
     confidence: result.score,
@@ -59,8 +64,21 @@ function buildAssignReason(groupTitle: string, domainSeed?: string): string {
 }
 
 export async function analyzeFullWindow(windowId?: number): Promise<number> {
-  const queryArg = windowId !== undefined ? { windowId } : {};
-  const tabs = await chrome.tabs.query(queryArg);
+  // Always scope to a single window — Chrome tab groups can't span windows,
+  // so a multi-window cluster would never be applyable. If the caller didn't
+  // specify, fall back to the focused window.
+  let targetWindowId = windowId;
+  if (targetWindowId === undefined) {
+    try {
+      const win = await chrome.windows.getLastFocused({ windowTypes: ["normal"] });
+      if (win.id !== undefined) targetWindowId = win.id;
+    } catch {
+      return 0;
+    }
+  }
+  if (targetWindowId === undefined) return 0;
+
+  const tabs = await chrome.tabs.query({ windowId: targetWindowId });
   const prefs = await PreferencesRepo.get();
   const newGroups = suggestNewGroups(tabs, {
     minSize: prefs.minClusterSize,
@@ -72,10 +90,20 @@ export async function analyzeFullWindow(windowId?: number): Promise<number> {
 
   for (const ng of newGroups) {
     if (await SuggestionHistoryRepo.hasRecent(ng.fingerprint, SUPPRESSION_WINDOW_MS)) continue;
-    if (pending.some((p) => p.kind === "create" && p.reason.includes(ng.cluster.label))) continue;
+    if (
+      pending.some(
+        (p) =>
+          p.kind === "create" &&
+          p.windowId === targetWindowId &&
+          p.reason.includes(ng.cluster.label),
+      )
+    ) {
+      continue;
+    }
 
     await SuggestionsRepo.create({
       kind: "create",
+      windowId: targetWindowId,
       tabIds: ng.cluster.members
         .map((m) => m.tabId)
         .filter((v): v is number => typeof v === "number"),
