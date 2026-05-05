@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Light theme — default. */
+  :root,
+  html[data-theme="light"] {
     --surface: 252 252 253;
     --surface-muted: 244 244 247;
     --surface-subtle: 234 235 240;
@@ -15,8 +17,9 @@
     --border: 225 226 232;
   }
 
+  /* Dark via system preference (only when no explicit override is set). */
   @media (prefers-color-scheme: dark) {
-    :root {
+    html:not([data-theme]) {
       --surface: 14 14 18;
       --surface-muted: 22 22 28;
       --surface-subtle: 32 33 40;
@@ -27,6 +30,20 @@
       --accent-soft: 40 36 78;
       --border: 44 45 54;
     }
+  }
+
+  /* Forced dark — beats the media query above by specificity (the explicit
+     attribute selector wins) and applies regardless of system setting. */
+  html[data-theme="dark"] {
+    --surface: 14 14 18;
+    --surface-muted: 22 22 28;
+    --surface-subtle: 32 33 40;
+    --ink: 240 240 244;
+    --ink-muted: 170 172 184;
+    --ink-faint: 110 112 124;
+    --accent: 142 134 255;
+    --accent-soft: 40 36 78;
+    --border: 44 45 54;
   }
 
   html,

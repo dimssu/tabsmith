@@ -3,6 +3,7 @@ import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { useBroadcast } from "@/hooks/useBroadcast";
 import { CommandPalette } from "@/components/CommandPalette";
+import { useTheme } from "@/hooks/useTheme";
 import { Header } from "./Header";
 import { SuggestionsList } from "./SuggestionsList";
 import { CurrentNote } from "./CurrentNote";
@@ -11,6 +12,7 @@ import { ReminderList } from "./ReminderList";
 import { TabBar, type TabKey } from "./TabBar";
 
 export function App() {
+  useTheme();
   const [tab, setTab] = useState<TabKey>("suggestions");
   const [refreshNonce, setRefreshNonce] = useState(0);
   const refresh = useCallback(() => setRefreshNonce((n) => n + 1), []);

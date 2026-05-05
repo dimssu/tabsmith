@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
 import { Bell, ExternalLink, Layers, Sparkles, StickyNote } from "@/components/Icon";
@@ -10,6 +11,7 @@ import { debounce, favicon, shortHost } from "@/shared/utils";
 type Mode = "menu" | "note" | "remind" | "group";
 
 export function App() {
+  useTheme();
   const [mode, setMode] = useState<Mode>("menu");
   const current = useAsync(() => send({ type: "tabs:current" }), []);
   const url = current.data?.url ?? "";

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
 import { Sparkles } from "@/components/Icon";
-import type { Preferences } from "@/types";
+import type { Preferences, ThemeMode } from "@/types";
 
 export function App() {
+  useTheme();
   const prefs = useAsync(() => send({ type: "prefs:get" }), []);
 
   return (
@@ -24,8 +26,16 @@ export function App() {
           <PreferencesForm initial={prefs.data} onSaved={prefs.refresh} />
         )}
 
+        <Section title="Appearance">
+          <ThemePicker />
+        </Section>
+
         <Section title="Notifications">
           <NotificationsToggle />
+        </Section>
+
+        <Section title="Notes">
+          <ReadModeToggle />
         </Section>
 
         <Section title="Data">
@@ -199,6 +209,48 @@ function NumberRow({
   );
 }
 
+function ThemePicker() {
+  const prefs = useAsync(() => send({ type: "prefs:get" }), []);
+  const options: { value: ThemeMode; label: string; sub: string }[] = [
+    { value: "system", label: "System", sub: "Follow OS appearance" },
+    { value: "light", label: "Light", sub: "Always light" },
+    { value: "dark", label: "Dark", sub: "Always dark" },
+  ];
+  if (!prefs.data) return null;
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] text-ink-faint">
+        Tabsmith follows your system theme by default. Override here if you want
+        a fixed look across the side panel, popup, and options page.
+      </p>
+      <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-2">
+        {options.map((opt) => {
+          const active = prefs.data?.themeMode === opt.value;
+          return (
+            <button
+              key={opt.value}
+              role="radio"
+              aria-checked={active}
+              onClick={async () => {
+                await send({ type: "prefs:update", patch: { themeMode: opt.value } });
+                prefs.refresh();
+              }}
+              className={`text-left px-3 py-2.5 rounded-lg border transition-colors ${
+                active
+                  ? "bg-accent-soft border-accent/40 text-accent"
+                  : "bg-surface border-border text-ink hover:bg-surface-muted"
+              }`}
+            >
+              <div className="text-[13px] font-medium">{opt.label}</div>
+              <div className="text-[11px] text-ink-faint mt-0.5">{opt.sub}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function NotificationsToggle() {
   const prefs = useAsync(() => send({ type: "prefs:get" }), []);
   if (!prefs.data) return null;
@@ -215,6 +267,34 @@ function NotificationsToggle() {
         checked={prefs.data.notificationsEnabled}
         onChange={async (e) => {
           await send({ type: "prefs:update", patch: { notificationsEnabled: e.target.checked } });
+          prefs.refresh();
+        }}
+        className="w-4 h-4 accent-accent"
+      />
+    </label>
+  );
+}
+
+function ReadModeToggle() {
+  const prefs = useAsync(() => send({ type: "prefs:get" }), []);
+  if (!prefs.data) return null;
+  return (
+    <label className="flex items-center justify-between gap-3">
+      <div>
+        <div className="text-[13px] text-ink font-medium">Open notes in read mode</div>
+        <p className="text-[11px] text-ink-faint mt-0.5">
+          When on, revisiting a tab shows its note as formatted Markdown by
+          default. Switch back to edit mode any time from the inline toggle.
+        </p>
+      </div>
+      <input
+        type="checkbox"
+        checked={prefs.data.noteReadModeDefault}
+        onChange={async (e) => {
+          await send({
+            type: "prefs:update",
+            patch: { noteReadModeDefault: e.target.checked },
+          });
           prefs.refresh();
         }}
         className="w-4 h-4 accent-accent"
