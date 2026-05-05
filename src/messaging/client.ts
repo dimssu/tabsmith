@@ -24,6 +24,7 @@ export function onBroadcast(handler: (msg: Broadcast) => void): () => void {
         (message as { type: string }).type.startsWith("notes:") ||
         (message as { type: string }).type.startsWith("reminders:") ||
         (message as { type: string }).type.startsWith("prefs:") ||
+        (message as { type: string }).type.startsWith("groups:") ||
         (message as { type: string }).type.startsWith("palette:"))
     ) {
       handler(message as Broadcast);

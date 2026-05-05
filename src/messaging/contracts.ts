@@ -102,6 +102,7 @@ export type Broadcast =
   | { type: "notes:changed"; url: string }
   | { type: "reminders:changed" }
   | { type: "prefs:changed" }
+  | { type: "groups:changed" }
   | { type: "palette:open" };
 
 export const BROADCAST_CHANNEL = "tabsmith-broadcast";

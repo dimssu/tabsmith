@@ -99,12 +99,14 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
 
     case "groups:rename":
       await chrome.tabGroups.update(msg.groupId, { title: msg.title });
+      broadcast({ type: "groups:changed" });
       return { ok: true } as Response<M>;
 
     case "groups:recolor":
       await chrome.tabGroups.update(msg.groupId, {
         color: msg.color as chrome.tabGroups.ColorEnum,
       });
+      broadcast({ type: "groups:changed" });
       return { ok: true } as Response<M>;
 
     case "search:everything":
