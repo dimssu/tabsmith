@@ -9,6 +9,9 @@ export const NoteSchema = z.object({
 });
 export type Note = z.infer<typeof NoteSchema>;
 
+export const RecurrenceKindSchema = z.enum(["none", "daily", "weekly", "monthly"]);
+export type RecurrenceKind = z.infer<typeof RecurrenceKindSchema>;
+
 export const ReminderSchema = z.object({
   id: z.string().min(1),
   url: z.string().min(1),
@@ -17,6 +20,9 @@ export const ReminderSchema = z.object({
   createdAt: z.number().int().nonnegative(),
   fired: z.boolean().default(false),
   note: z.string().optional(),
+  recurrence: RecurrenceKindSchema.optional(),
+  // Counter for diagnostics; bumps by 1 each time a recurring reminder fires.
+  fireCount: z.number().int().nonnegative().default(0),
 });
 export type Reminder = z.infer<typeof ReminderSchema>;
 
@@ -60,12 +66,17 @@ export const SuggestionSchema = z.object({
 });
 export type Suggestion = z.infer<typeof SuggestionSchema>;
 
+export const ThemeModeSchema = z.enum(["system", "light", "dark"]);
+export type ThemeMode = z.infer<typeof ThemeModeSchema>;
+
 export const PreferencesSchema = z.object({
   assignThreshold: z.number().min(0).max(1).default(0.55),
   createThreshold: z.number().min(0).max(1).default(0.45),
   minClusterSize: z.number().int().min(2).max(20).default(3),
   notificationsEnabled: z.boolean().default(true),
   idleAnalyzeSeconds: z.number().int().min(10).max(600).default(30),
+  themeMode: ThemeModeSchema.default("system"),
+  noteReadModeDefault: z.boolean().default(true),
   groupColors: z
     .array(z.string())
     .default(["blue", "cyan", "green", "yellow", "orange", "red", "pink", "purple"]),

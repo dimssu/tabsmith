@@ -69,12 +69,15 @@ export function ReminderList({ onChanged }: Props) {
                   <ExternalLink width={10} height={10} />
                 </a>
               </div>
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                 {r.fired ? (
                   <Pill tone="neutral">Fired</Pill>
                 ) : (
                   <Pill tone="accent">{relativeTime(r.fireAt)}</Pill>
                 )}
+                {r.recurrence && r.recurrence !== "none" ? (
+                  <Pill tone="success">↻ {r.recurrence}</Pill>
+                ) : null}
                 <span className="text-[10px] text-ink-faint">
                   {new Date(r.fireAt).toLocaleString()}
                 </span>

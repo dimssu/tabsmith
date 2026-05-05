@@ -24,25 +24,45 @@ export const RemindersRepo = {
     fireAt: number;
     titleHint?: string;
     note?: string;
+    recurrence?: Reminder["recurrence"];
   }): Promise<Reminder> {
     const id = uid();
-    const reminder: Reminder = {
+    const reminder: Reminder = ReminderSchema.parse({
       id,
       url: input.url,
       fireAt: input.fireAt,
       createdAt: Date.now(),
       fired: false,
+      fireCount: 0,
       ...(input.titleHint ? { titleHint: input.titleHint } : {}),
       ...(input.note ? { note: input.note } : {}),
-    };
-    await driver.set(key(id), ReminderSchema.parse(reminder));
+      ...(input.recurrence && input.recurrence !== "none"
+        ? { recurrence: input.recurrence }
+        : {}),
+    });
+    await driver.set(key(id), reminder);
     return reminder;
   },
 
   async markFired(id: string): Promise<void> {
     const existing = await this.get(id);
     if (!existing) return;
-    await driver.set(key(id), { ...existing, fired: true });
+    await driver.set(key(id), {
+      ...existing,
+      fired: true,
+      fireCount: existing.fireCount + 1,
+    });
+  },
+
+  async reschedule(id: string, fireAt: number): Promise<void> {
+    const existing = await this.get(id);
+    if (!existing) return;
+    await driver.set(key(id), {
+      ...existing,
+      fireAt,
+      fired: false,
+      fireCount: existing.fireCount + 1,
+    });
   },
 
   async delete(id: string): Promise<void> {

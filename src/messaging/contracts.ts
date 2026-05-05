@@ -1,4 +1,4 @@
-import type { Note, Reminder, Suggestion, Preferences } from "@/types";
+import type { Note, Reminder, Suggestion, Preferences, RecurrenceKind } from "@/types";
 
 // Discriminated union of every message that crosses the runtime boundary.
 // Each request type R has a paired response type Response<R> below.
@@ -13,7 +13,7 @@ export type Message =
   | { type: "notes:upsert"; url: string; body: string; pinned?: boolean }
   | { type: "notes:list" }
   | { type: "notes:delete"; url: string }
-  | { type: "reminders:create"; url: string; fireAt: number; titleHint?: string; note?: string }
+  | { type: "reminders:create"; url: string; fireAt: number; titleHint?: string; note?: string; recurrence?: RecurrenceKind }
   | { type: "reminders:list" }
   | { type: "reminders:delete"; id: string }
   | { type: "groups:listForCurrentWindow" }

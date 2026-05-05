@@ -3,7 +3,7 @@
 
 import { syncGroupsForWindow } from "./groupSync";
 import { analyzeNewTab, analyzeFullWindow } from "./suggest";
-import { handleAlarm, handleNotificationClick } from "./reminders";
+import { handleAlarm, listenForReminderEvents } from "./reminders";
 import { installRouter } from "./router";
 import { refreshBadge } from "./badge";
 import { GroupMetaRepo, SuggestionsRepo } from "@/storage";
@@ -181,4 +181,4 @@ chrome.windows.onRemoved.addListener(async (closedWindowId) => {
 
 // --- Notifications -----------------------------------------------------------
 
-chrome.notifications.onClicked.addListener(handleNotificationClick);
+listenForReminderEvents();

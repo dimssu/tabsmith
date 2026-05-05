@@ -77,9 +77,10 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
       return { ok: true } as Response<M>;
 
     case "reminders:create": {
-      const opts: { titleHint?: string; note?: string } = {};
+      const opts: Parameters<typeof scheduleReminder>[2] = {};
       if (msg.titleHint !== undefined) opts.titleHint = msg.titleHint;
       if (msg.note !== undefined) opts.note = msg.note;
+      if (msg.recurrence !== undefined) opts.recurrence = msg.recurrence;
       const { id } = await scheduleReminder(msg.url, msg.fireAt, opts);
       const reminder = await RemindersRepo.get(id);
       return reminder as Response<M>;
@@ -276,9 +277,12 @@ async function importAll(payload: unknown): Promise<{ imported: number }> {
   for (const reminder of data.reminders ?? []) {
     if (!reminder?.url || !reminder?.fireAt) continue;
     if (reminder.fireAt < Date.now()) continue;
-    const opts: { titleHint?: string; note?: string } = {};
+    const opts: Parameters<typeof scheduleReminder>[2] = {};
     if (reminder.titleHint) opts.titleHint = reminder.titleHint;
     if (reminder.note) opts.note = reminder.note;
+    if (reminder.recurrence && reminder.recurrence !== "none") {
+      opts.recurrence = reminder.recurrence;
+    }
     await scheduleReminder(reminder.url, reminder.fireAt, opts);
     imported++;
   }
