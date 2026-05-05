@@ -6,6 +6,7 @@ import { Pill } from "@/components/Pill";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { shortHost, debounce, favicon, relativeTime } from "@/shared/utils";
+import { renderMarkdown } from "@/shared/markdown";
 import type { CurrentTab } from "@/messaging/contracts";
 import { ReminderQuickSet } from "./ReminderQuickSet";
 
@@ -22,10 +23,22 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
     [url],
   );
 
+  const prefs = useAsync(() => send({ type: "prefs:get" }), []);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
   const [pinned, setPinned] = useState(false);
+  const [readMode, setReadMode] = useState<boolean | null>(null);
   const initialLoadedFor = useRef<string | null>(null);
+
+  // First time we have both the user's preference and a saved note body,
+  // start in read mode (when configured) so the formatted view is the
+  // default. Empty notes always start in edit mode.
+  useEffect(() => {
+    if (readMode !== null) return;
+    if (prefs.data === undefined || note.loading) return;
+    const wantRead = !!prefs.data.noteReadModeDefault && !!note.data?.body?.trim();
+    setReadMode(wantRead);
+  }, [readMode, prefs.data, note.loading, note.data]);
 
   useEffect(() => {
     if (!url) return;
@@ -116,19 +129,49 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
       </div>
 
       <div className="relative">
-        <textarea
-          value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
-            save(e.target.value, pinned, url);
-          }}
-          placeholder="Why did I open this? Where did I stop? What's next?"
-          className="w-full min-h-[160px] px-3.5 py-3 text-[13px] leading-relaxed
-            bg-surface-muted/60 border border-border rounded-xl
-            placeholder:text-ink-faint resize-y focus:focus-ring outline-none
-            scrollbar-thin"
-        />
+        {readMode && draft.trim() ? (
+          <button
+            onClick={() => setReadMode(false)}
+            className="w-full min-h-[160px] px-3.5 py-3 text-[13px] leading-relaxed
+              bg-surface-muted/60 border border-border rounded-xl text-left
+              prose-tabsmith hover:border-accent/30 transition-colors cursor-text
+              outline-none focus-visible:focus-ring"
+            aria-label="Edit note"
+            // Markdown renderer escapes input + only emits known-safe tags;
+            // see src/shared/markdown.ts and its tests.
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(draft) }}
+          />
+        ) : (
+          <textarea
+            value={draft}
+            autoFocus={!draft.trim()}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              save(e.target.value, pinned, url);
+            }}
+            onBlur={() => {
+              // Auto-flip back to read mode on blur if there's something to render.
+              if (prefs.data?.noteReadModeDefault && draft.trim()) setReadMode(true);
+            }}
+            placeholder="Why did I open this? Where did I stop? What's next?  Markdown supported."
+            className="w-full min-h-[160px] px-3.5 py-3 text-[13px] leading-relaxed
+              bg-surface-muted/60 border border-border rounded-xl
+              placeholder:text-ink-faint resize-y focus:focus-ring outline-none
+              scrollbar-thin font-mono"
+          />
+        )}
         <div className="absolute bottom-2 right-3 flex items-center gap-2 text-[10px] text-ink-faint">
+          {draft.trim() ? (
+            <button
+              onClick={() => setReadMode((r) => !r)}
+              className="px-1.5 py-[2px] rounded border border-border bg-surface
+                hover:text-ink transition-colors"
+              aria-pressed={!!readMode}
+              title={readMode ? "Switch to edit mode" : "Switch to read mode"}
+            >
+              {readMode ? "Edit" : "Preview"}
+            </button>
+          ) : null}
           {note.data ? (
             <span title={new Date(note.data.updatedAt).toLocaleString()}>
               edited {relativeTime(note.data.updatedAt)}

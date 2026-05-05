@@ -49,6 +49,36 @@
   }
 }
 
+@layer components {
+  /* Typographic styles for rendered note Markdown. Kept compact — note view
+     is a sidebar pane, not a long-form reader. */
+  .prose-tabsmith :where(p) {
+    margin-bottom: 0.5rem;
+    line-height: 1.55;
+  }
+  .prose-tabsmith :where(strong) {
+    font-weight: 600;
+  }
+  .prose-tabsmith :where(em) {
+    font-style: italic;
+  }
+  .prose-tabsmith :where(code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  }
+  .prose-tabsmith :where(a) {
+    word-break: break-word;
+  }
+  .prose-tabsmith :where(ul, ol) {
+    margin-bottom: 0.5rem;
+  }
+  .prose-tabsmith :where(blockquote) {
+    margin: 0.25rem 0 0.5rem;
+  }
+  .prose-tabsmith :where(hr) {
+    margin: 0.5rem 0;
+  }
+}
+
 @layer utilities {
   .focus-ring {
     @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-surface;
