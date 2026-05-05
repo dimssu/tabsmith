@@ -17,6 +17,7 @@ import { broadcast } from "@/messaging/client";
 import { applySuggestion, analyzeFullWindow, dismissSuggestion } from "./suggest";
 import { cancelReminder, scheduleReminder } from "./reminders";
 import { refreshBadge } from "./badge";
+import type { Suggestion } from "@/types";
 
 export function installRouter(): void {
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -36,15 +37,9 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
       return { ok: true } as Response<M>;
 
     case "suggestions:list": {
-      const all = await SuggestionsRepo.pending();
       const targetWindowId = await resolveWindowId(msg.windowId);
-      // Older suggestions written before the windowId field are kept visible
-      // (windowId === undefined) so users don't lose them across the upgrade;
-      // anything tagged with a different window is filtered out.
-      const filtered = all.filter(
-        (s) => s.windowId === undefined || s.windowId === targetWindowId,
-      );
-      return filtered as Response<M>;
+      const live = await listLiveSuggestionsFor(targetWindowId);
+      return live as Response<M>;
     }
 
     case "suggestions:accept":
@@ -133,6 +128,56 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
       return { ok: true } as Response<M>;
   }
   throw new Error(`Unknown message: ${(msg as { type: string }).type}`);
+}
+
+// List pending suggestions for a window, GC'ing any that have gone stale:
+// - untagged (pre-windowId-fix) records, regardless of which window asks
+// - records tagged with a different window
+// - records whose referenced tabs no longer exist
+// - "assign" records whose target group no longer exists
+async function listLiveSuggestionsFor(
+  targetWindowId: number | undefined,
+): Promise<Suggestion[]> {
+  const all = await SuggestionsRepo.pending();
+  if (targetWindowId === undefined) return [];
+
+  const tabsInWindow = await chrome.tabs.query({ windowId: targetWindowId });
+  const liveTabIds = new Set(
+    tabsInWindow
+      .map((t) => t.id)
+      .filter((v): v is number => typeof v === "number"),
+  );
+  const liveGroupIds = new Set(
+    tabsInWindow
+      .map((t) => t.groupId)
+      .filter((v): v is number => typeof v === "number" && v !== -1),
+  );
+
+  const live: Suggestion[] = [];
+  let removed = 0;
+  for (const s of all) {
+    const wrongWindow = s.windowId === undefined || s.windowId !== targetWindowId;
+    const tabsMissing = s.tabIds.length === 0
+      || !s.tabIds.every((id) => liveTabIds.has(id));
+    const groupMissing =
+      s.kind === "assign"
+      && (s.targetGroupId === undefined || !liveGroupIds.has(s.targetGroupId));
+
+    if (wrongWindow || tabsMissing || groupMissing) {
+      // Drop if it's stale relative to *this* window. We only delete when
+      // the suggestion is plainly invalid (missing tabs/group) — for the
+      // "wrong window" case we just hide it from this caller; another
+      // window's side panel may still find it relevant.
+      if (tabsMissing || groupMissing || s.windowId === undefined) {
+        await SuggestionsRepo.delete(s.id);
+        removed++;
+      }
+      continue;
+    }
+    live.push(s);
+  }
+  if (removed > 0) await refreshBadge();
+  return live;
 }
 
 async function resolveWindowId(hint: number | undefined): Promise<number | undefined> {

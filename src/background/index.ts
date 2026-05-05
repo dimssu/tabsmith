@@ -64,11 +64,26 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
+chrome.tabs.onRemoved.addListener(async (tabId) => {
   const handle = pendingAnalyses.get(tabId);
   if (handle) {
     clearTimeout(handle);
     pendingAnalyses.delete(tabId);
+  }
+  // Drop any suggestion that referenced this tab — a "create group" with a
+  // missing member can't be applied, and an "assign" for a closed tab is
+  // equally stale.
+  const all = await SuggestionsRepo.list();
+  let removed = 0;
+  for (const s of all) {
+    if (s.tabIds.includes(tabId)) {
+      await SuggestionsRepo.delete(s.id);
+      removed++;
+    }
+  }
+  if (removed > 0) {
+    broadcast({ type: "suggestions:changed" });
+    await refreshBadge();
   }
 });
 
