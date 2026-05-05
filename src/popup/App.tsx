@@ -206,11 +206,18 @@ function RemindSection({ url, title, onBack }: { url: string; title: string; onB
 }
 
 function GroupSection({ onBack }: { onBack: () => void }) {
+  // Use the active tab to derive the host window — popups are always
+  // anchored to the focused window, and the active tab in that window is
+  // a reliable signal of the windowId we want.
   const suggestions = useAsync(async () => {
-    const win = await chrome.windows.getCurrent();
+    const [activeTab] = await chrome.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    });
+    const wid = activeTab?.windowId;
     const all =
-      win.id !== undefined
-        ? await send({ type: "suggestions:list", windowId: win.id })
+      wid !== undefined
+        ? await send({ type: "suggestions:list", windowId: wid })
         : [];
     return all.filter((s) => s.kind === "assign");
   }, []);

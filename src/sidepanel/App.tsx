@@ -14,10 +14,19 @@ export function App() {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const refresh = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
-  // Each side panel instance is anchored to a window. Resolve once and pass
-  // it on every suggestion-related call so multi-window users get the right
-  // suggestions per panel.
-  const win = useAsync(() => chrome.windows.getCurrent(), []);
+  // Each side panel instance is anchored to a window. Prefer the URL-stamped
+  // windowId (set by the background when the panel is opened) — it's
+  // unambiguous. chrome.windows.getCurrent() from a side panel can return the
+  // last-focused window rather than the host, so we only use it as fallback.
+  const win = useAsync(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const stamped = params.get("windowId");
+    if (stamped) {
+      const n = Number(stamped);
+      if (Number.isFinite(n)) return { id: n } as chrome.windows.Window;
+    }
+    return chrome.windows.getCurrent();
+  }, []);
   const windowId = win.data?.id;
 
   const current = useAsync(() => send({ type: "tabs:current" }), [refreshNonce]);
@@ -86,7 +95,12 @@ export function App() {
       </main>
 
       <footer className="px-4 py-3 border-t border-border text-[11px] text-ink-faint flex items-center justify-between">
-        <span>Tabsmith · 100% on-device</span>
+        <span>
+          Tabsmith · 100% on-device
+          {windowId !== undefined ? (
+            <span className="ml-2 opacity-60">· window #{windowId}</span>
+          ) : null}
+        </span>
         <button
           className="text-ink-muted hover:text-ink"
           onClick={() => chrome.runtime.openOptionsPage()}

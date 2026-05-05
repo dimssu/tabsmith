@@ -14,22 +14,45 @@ const FULL_ANALYZE_ALARM = "tabsmith:full-analyze";
 
 installRouter();
 
+// Drop any suggestions written by a previous build. They may be tagged with
+// stale windowIds (or none at all on an old upgrade path), which causes them
+// to leak into newly-opened windows. The next periodic alarm regenerates
+// fresh, correctly-tagged suggestions within ~30s.
+async function wipeStaleSuggestions(): Promise<void> {
+  await SuggestionsRepo.clearAll();
+  broadcast({ type: "suggestions:changed" });
+  await refreshBadge();
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: false })
     .catch(() => {});
-  await refreshBadge();
+  await wipeStaleSuggestions();
   await schedulePeriodicAnalyze();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  await refreshBadge();
+  await wipeStaleSuggestions();
   await schedulePeriodicAnalyze();
 });
 
-// Allow opening the side panel from the action icon
+// Allow opening the side panel from the action icon. We stamp the host
+// windowId into the side-panel URL so the page can read it without relying
+// on chrome.windows.getCurrent(), which from inside a side panel can return
+// the last-focused window rather than the host one.
 chrome.action.onClicked.addListener(async (tab) => {
-  if (tab.windowId !== undefined) {
+  if (tab.windowId === undefined) return;
+  try {
+    await chrome.sidePanel.setOptions({
+      tabId: tab.id,
+      path: `src/sidepanel/index.html?windowId=${tab.windowId}`,
+      enabled: true,
+    });
+    await chrome.sidePanel.open({ windowId: tab.windowId });
+  } catch {
+    // setOptions requires a tabId; if we don't have one fall back to a
+    // global open.
     await chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
   }
 });

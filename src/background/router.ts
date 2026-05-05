@@ -130,11 +130,12 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
   throw new Error(`Unknown message: ${(msg as { type: string }).type}`);
 }
 
-// List pending suggestions for a window, GC'ing any that have gone stale:
-// - untagged (pre-windowId-fix) records, regardless of which window asks
-// - records tagged with a different window
-// - records whose referenced tabs no longer exist
-// - "assign" records whose target group no longer exists
+// List pending suggestions for a window, GC'ing any that have gone stale.
+//
+// IMPORTANT: only validate tabIds/groupId when the suggestion claims to be
+// for the target window — checking another window's tabs against this
+// window's live-tab set would (correctly) report them as missing and cause
+// us to wrongly delete valid cross-window suggestions.
 async function listLiveSuggestionsFor(
   targetWindowId: number | undefined,
 ): Promise<Suggestion[]> {
@@ -155,27 +156,35 @@ async function listLiveSuggestionsFor(
 
   const live: Suggestion[] = [];
   let removed = 0;
-  for (const s of all) {
-    const wrongWindow = s.windowId === undefined || s.windowId !== targetWindowId;
-    const tabsMissing = s.tabIds.length === 0
-      || !s.tabIds.every((id) => liveTabIds.has(id));
-    const groupMissing =
-      s.kind === "assign"
-      && (s.targetGroupId === undefined || !liveGroupIds.has(s.targetGroupId));
 
-    if (wrongWindow || tabsMissing || groupMissing) {
-      // Drop if it's stale relative to *this* window. We only delete when
-      // the suggestion is plainly invalid (missing tabs/group) — for the
-      // "wrong window" case we just hide it from this caller; another
-      // window's side panel may still find it relevant.
-      if (tabsMissing || groupMissing || s.windowId === undefined) {
-        await SuggestionsRepo.delete(s.id);
-        removed++;
-      }
+  for (const s of all) {
+    // 1. Pre-fix records (no windowId) are always stale — delete on sight.
+    if (s.windowId === undefined) {
+      await SuggestionsRepo.delete(s.id);
+      removed++;
       continue;
     }
+
+    // 2. Records tagged with a different window: not relevant here, but
+    //    don't touch them — another window's panel may still need them.
+    if (s.windowId !== targetWindowId) continue;
+
+    // 3. Records claiming to be for this window — validate referenced tabs.
+    const tabsMissing =
+      s.tabIds.length === 0 || !s.tabIds.every((id) => liveTabIds.has(id));
+    const groupMissing =
+      s.kind === "assign" &&
+      (s.targetGroupId === undefined || !liveGroupIds.has(s.targetGroupId));
+
+    if (tabsMissing || groupMissing) {
+      await SuggestionsRepo.delete(s.id);
+      removed++;
+      continue;
+    }
+
     live.push(s);
   }
+
   if (removed > 0) await refreshBadge();
   return live;
 }
