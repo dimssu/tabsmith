@@ -20,6 +20,8 @@ export function App() {
           <Pill tone="neutral" className="ml-auto">100% on-device</Pill>
         </header>
 
+        <FeatureGuide />
+
         {prefs.loading || !prefs.data ? (
           <p className="text-[13px] text-ink-faint">Loading…</p>
         ) : (
@@ -68,6 +70,233 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         {title}
       </h2>
       <div className="rounded-xl border border-border bg-surface-muted/40 p-5">{children}</div>
+    </section>
+  );
+}
+
+interface FeatureGroup {
+  title: string;
+  intro?: string;
+  bullets: Array<{ what: string; how?: string }>;
+}
+
+const FEATURE_GUIDE: FeatureGroup[] = [
+  {
+    title: "Smart group suggestions",
+    intro:
+      "Tabsmith quietly clusters related tabs and proposes groups in the side panel. Nothing is auto-applied — every group needs one click.",
+    bullets: [
+      {
+        what: "“New group” suggestions cluster open tabs by domain + title similarity.",
+        how: "Side panel → Suggestions tab. Click Create group to apply, or Dismiss to suppress for 24h.",
+      },
+      {
+        what: "“Add to group” suggestions fire when you open a new tab that looks related to an existing group.",
+        how: "They appear within ~2s of the new tab loading. The badge on the action icon shows the pending count.",
+      },
+      {
+        what: "All suggestions are scoped to the window you’re in — multi-window users get independent suggestion lists per window.",
+      },
+      {
+        what: "Click Analyze in the side panel header to re-scan immediately instead of waiting for the 30s periodic pass.",
+      },
+    ],
+  },
+  {
+    title: "Per-URL notes",
+    intro:
+      "Leave a short note on any page — why you opened it, where you stopped, what's next. It comes back the moment you revisit.",
+    bullets: [
+      {
+        what: "Notes autosave ~350ms after you stop typing. A “saved” pill confirms.",
+        how: "Side panel → Note tab, or click the Tabsmith action icon → Add note.",
+      },
+      {
+        what: "Markdown is supported (headings, **bold**, *italic*, `code`, [links](url), lists, > blockquotes, horizontal rules).",
+        how: "Toggle Preview / Edit in the bottom-right of the editor. Read mode is the default; change that in Notes settings below.",
+      },
+      {
+        what: "Pin a note to keep it surfaced in any future Notes list.",
+        how: "Pin icon at the top-right of the note editor.",
+      },
+      {
+        what: "URLs are normalized before keying notes — www, trailing slashes, utm_*/gclid/fbclid params are stripped — so the same logical page only ever has one note.",
+      },
+    ],
+  },
+  {
+    title: "Tab reminders",
+    intro:
+      "Time-based reminders that work even after you close the tab. On fire, Tabsmith reopens it or focuses the existing one.",
+    bullets: [
+      {
+        what: "Quick presets: 1h, 3h, Tomorrow, Next week.",
+        how: "Side panel → Note tab → reminder section, or popup → Remind me later.",
+      },
+      {
+        what: "Recurring reminders: Once / Daily / Weekly / Monthly.",
+        how: "Select the recurrence radio below the time presets before clicking a preset.",
+      },
+      {
+        what: "Snooze from the notification itself: Snooze 1h or Tomorrow buttons.",
+        how: "Both buttons appear on every reminder notification — no need to open Tabsmith to snooze.",
+      },
+      {
+        what: "Reminders survive browser restart — Chrome's alarms API persists them.",
+      },
+      {
+        what: "See the full list, sorted by fire time, with a click-through to delete each.",
+        how: "Side panel → Reminders tab.",
+      },
+    ],
+  },
+  {
+    title: "Command palette",
+    intro:
+      "One keystroke to find anything Tabsmith knows about.",
+    bullets: [
+      {
+        what: "Open the palette with ⌘K (mac) or Ctrl+K (Windows/Linux).",
+        how: "Works inside the side panel; also bound globally so the shortcut works from any page (opens the side panel first).",
+      },
+      {
+        what: "Searches across open tabs (current window first), notes, reminders, and recently-closed tabs.",
+      },
+      {
+        what: "Arrow keys to navigate, Enter to open or restore, Esc to close.",
+      },
+      {
+        what: "Closed-tab hits are restored via Chrome's sessions API where possible, so the entire history comes back.",
+      },
+    ],
+  },
+  {
+    title: "Group management",
+    intro:
+      "Rename and recolor any group in the current window without leaving Tabsmith.",
+    bullets: [
+      {
+        what: "Click a group's color dot to open the swatch picker.",
+        how: "Side panel → Groups tab. The change applies immediately and syncs to every open side panel.",
+      },
+      {
+        what: "Click a group's title to rename it inline. Enter commits, Esc reverts.",
+      },
+    ],
+  },
+  {
+    title: "Popup quick-actions",
+    intro:
+      "Click the Tabsmith icon in the toolbar for fast, single-tab actions without opening the side panel.",
+    bullets: [
+      { what: "Add note to this tab — autosaving Markdown editor in a compact view." },
+      { what: "Remind me later — same presets and recurrence options as the side panel." },
+      { what: "What group should this go in? — top “add to group” matches for the active tab." },
+    ],
+  },
+  {
+    title: "Customization",
+    intro: "Tune Tabsmith to your style. All preferences below persist locally.",
+    bullets: [
+      {
+        what: "Theme: System / Light / Dark.",
+        how: "Set in Appearance section below.",
+      },
+      {
+        what: "Suggestion thresholds: control how confident Tabsmith must be before surfacing a group idea.",
+        how: "Set in Suggestions section below. Higher = fewer but more confident suggestions.",
+      },
+      {
+        what: "Notification preferences: turn reminder pings on or off.",
+        how: "Notifications section below.",
+      },
+      {
+        what: "Default note view: read or edit mode when revisiting a tab.",
+        how: "Notes section below.",
+      },
+      {
+        what: "Export, import, or clear all data as JSON — useful for moving between profiles.",
+        how: "Data section below.",
+      },
+    ],
+  },
+];
+
+function FeatureGuide() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[12px] uppercase tracking-[0.08em] text-ink-faint font-semibold">
+          How Tabsmith works
+        </h2>
+        <div className="flex items-center gap-2 text-[11px] text-ink-faint">
+          <button
+            className="hover:text-ink"
+            onClick={() => setOpenIdx(openIdx === -1 ? 0 : -1)}
+          >
+            {openIdx === -1 ? "Expand all sections" : "Collapse all"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface-muted/40 overflow-hidden">
+        {FEATURE_GUIDE.map((group, i) => {
+          const expanded = openIdx === -1 ? true : openIdx === i;
+          return (
+            <div
+              key={group.title}
+              className={`border-border ${i > 0 ? "border-t" : ""}`}
+            >
+              <button
+                onClick={() => setOpenIdx(expanded ? null : i)}
+                aria-expanded={expanded}
+                className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left
+                  hover:bg-surface-muted/60 transition-colors focus-visible:focus-ring outline-none"
+              >
+                <span className="text-[13.5px] font-semibold text-ink">{group.title}</span>
+                <span
+                  className={`text-ink-faint text-[11px] transition-transform ${expanded ? "rotate-90" : ""}`}
+                  aria-hidden
+                >
+                  ▶
+                </span>
+              </button>
+
+              {expanded ? (
+                <div className="px-5 pb-4 pt-1 space-y-2.5 animate-fade-in">
+                  {group.intro ? (
+                    <p className="text-[12.5px] text-ink-muted leading-relaxed">
+                      {group.intro}
+                    </p>
+                  ) : null}
+                  <ul className="space-y-1.5">
+                    {group.bullets.map((b, j) => (
+                      <li
+                        key={j}
+                        className="text-[12.5px] text-ink leading-relaxed flex gap-2"
+                      >
+                        <span className="text-accent shrink-0 mt-[3px]" aria-hidden>
+                          •
+                        </span>
+                        <span>
+                          {b.what}
+                          {b.how ? (
+                            <span className="block text-[11.5px] text-ink-muted mt-0.5">
+                              <span className="text-ink-faint">How:</span> {b.how}
+                            </span>
+                          ) : null}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }

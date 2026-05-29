@@ -136,8 +136,9 @@ export function App() {
           <button
             className="text-ink-muted hover:text-ink"
             onClick={() => chrome.runtime.openOptionsPage()}
+            title="Open the full guide, preferences, and data tools"
           >
-            Options
+            Guide &amp; Options
           </button>
         </div>
       </footer>
