@@ -106,6 +106,18 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
     if (editing) inputRef.current?.select();
   }, [editing]);
 
+  // Close the picker when clicking anywhere outside it.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDown = () => setPickerOpen(false);
+    // Defer so the toggling click doesn't immediately re-close it.
+    const t = setTimeout(() => window.addEventListener("mousedown", onDown), 0);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [pickerOpen]);
+
   const commit = async () => {
     setEditing(false);
     const next = draft.trim();
@@ -137,8 +149,13 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
           {pickerOpen ? (
             <div
               role="menu"
+              // Explicit width is required here: this popover is position:absolute
+              // anchored to a 14px-wide dot, and grid-cols-N collapses to zero
+              // when the container has no width, which makes the swatches stack.
+              style={{ width: 168 }}
               className="absolute left-0 top-5 z-20 rounded-lg border border-border
-                bg-surface shadow-md p-1.5 grid grid-cols-5 gap-1 animate-fade-in"
+                bg-surface shadow-md p-2 flex flex-wrap gap-1.5 animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
             >
               {COLOR_CHOICES.map((c) => (
                 <button
@@ -148,7 +165,7 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
                   aria-current={c === color}
                   onClick={() => recolor(c)}
                   className={cn(
-                    "w-5 h-5 rounded-full transition-transform hover:scale-110",
+                    "w-6 h-6 rounded-full transition-transform hover:scale-110 shrink-0",
                     COLOR_DOT[c],
                     c === color && "ring-2 ring-accent ring-offset-1 ring-offset-surface",
                   )}

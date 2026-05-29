@@ -67,19 +67,57 @@ export function App() {
     if (msg.type === "palette:open") setPaletteOpen(true);
   });
 
+  const [toast, setToast] = useState<{ tone: "success" | "neutral"; text: string } | null>(null);
+
   const onAnalyze = useCallback(async () => {
     if (windowId === undefined) return;
-    await send({ type: "suggestions:analyzeNow", windowId });
+    setToast({ tone: "neutral", text: "Analyzing tabs…" });
+    const result = await send({ type: "suggestions:analyzeNow", windowId });
+    if (result.created > 0) {
+      setToast({
+        tone: "success",
+        text: `Found ${result.created} new ${result.created === 1 ? "idea" : "ideas"}.`,
+      });
+    } else {
+      // 0 is by design when every tab is already grouped — say so explicitly
+      // rather than leaving the user wondering whether the button worked.
+      setToast({
+        tone: "neutral",
+        text:
+          "No new suggestions — every open tab is already in a group. Open more tabs or ungroup some to get fresh ideas.",
+      });
+    }
     refresh();
+    // Auto-dismiss the confirmation; leave the longer explanation up a bit
+    // longer so users have time to read it.
+    setTimeout(
+      () => setToast(null),
+      result.created > 0 ? 2200 : 5000,
+    );
   }, [refresh, windowId]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
+    <div className="min-h-screen flex flex-col bg-surface relative">
       <Header
         currentTabTitle={current.data?.title ?? ""}
         onAnalyze={onAnalyze}
         suggestionCount={suggestions.data?.length ?? 0}
       />
+
+      {toast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`mx-4 mt-3 px-3 py-2 rounded-lg text-[12px] leading-snug
+            border animate-slide-up ${
+              toast.tone === "success"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                : "bg-surface-muted border-border text-ink-muted"
+            }`}
+        >
+          {toast.text}
+        </div>
+      ) : null}
 
       <TabBar
         active={tab}
