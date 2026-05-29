@@ -1,24 +1,27 @@
-// In-page reminder banner. We inject this directly into the focused tab so
-// the user gets a visible signal even when OS notification permission is
-// missing (the #1 reason reminders feel like they're "silently failing").
-//
-// The injected function runs in the page's isolated world, so it has access
-// to chrome.runtime for sending messages back to the service worker.
+// In-page reminder banner. Injected directly into the focused tab so the
+// user gets a visible signal even when OS notification permission is missing.
+
+export interface BannerSnoozePreset {
+  label: string;
+  minutes: number;
+}
 
 export interface BannerPayload {
   reminderId: string;
   title: string;
   body: string;
   accentRgb: string; // e.g. "90 84 220"
+  presets: BannerSnoozePreset[];
+  // Pre-filled when the user has a saved custom value
+  lastCustomMinutes?: number;
 }
 
-// Plain function — must be serializable for chrome.scripting.executeScript.
+// The injected function MUST be serializable for chrome.scripting.executeScript.
 // Don't reference outer-scope variables; everything comes via `args`.
 export function bannerInjector(payload: BannerPayload) {
-  const BANNER_ID = "tabsmith-reminder-banner-v1";
-  const STYLE_ID = "tabsmith-reminder-banner-style-v1";
+  const BANNER_ID = "tabsmith-reminder-banner-v2";
+  const STYLE_ID = "tabsmith-reminder-banner-style-v2";
 
-  // If a previous banner is still up (e.g. recurring fire) replace it.
   document.getElementById(BANNER_ID)?.remove();
 
   if (!document.getElementById(STYLE_ID)) {
@@ -41,6 +44,7 @@ export function bannerInjector(payload: BannerPayload) {
   const fg = dark ? "#f0f0f4" : "#121216";
   const muted = dark ? "#a8aab6" : "#52545e";
   const border = dark ? "#2c2d36" : "#e1e2e8";
+  const surfaceMuted = dark ? "#1c1d24" : "#f4f4f7";
   const accent = `rgb(${payload.accentRgb})`;
 
   const root = document.createElement("div");
@@ -68,12 +72,13 @@ export function bannerInjector(payload: BannerPayload) {
     borderLeft: `4px solid ${accent}`,
     borderRadius: "12px",
     padding: "14px 16px",
-    boxShadow: "0 16px 40px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.08)",
+    boxShadow:
+      "0 16px 40px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.08)",
     fontSize: "13px",
     lineHeight: "1.5",
   });
 
-  // Header row
+  // --- Header row -----------------------------------------------------------
   const header = document.createElement("div");
   Object.assign(header.style, {
     display: "flex",
@@ -118,7 +123,7 @@ export function bannerInjector(payload: BannerPayload) {
   header.appendChild(closeBtn);
   card.appendChild(header);
 
-  // Body (note text), if any
+  // --- Body -----------------------------------------------------------------
   if (payload.body) {
     const bodyEl = document.createElement("div");
     bodyEl.textContent = payload.body;
@@ -134,41 +139,205 @@ export function bannerInjector(payload: BannerPayload) {
     card.appendChild(bodyEl);
   }
 
-  // Button row
+  // --- Button row -----------------------------------------------------------
   const buttonRow = document.createElement("div");
   Object.assign(buttonRow.style, {
     display: "flex",
     gap: "6px",
     alignItems: "center",
+    position: "relative",
   });
 
-  const makeBtn = (label: string, action: string, primary = false) => {
+  const makeBtn = (
+    label: string,
+    action: string,
+    opts: { primary?: boolean; ghost?: boolean } = {},
+  ) => {
     const b = document.createElement("button");
     b.textContent = label;
     b.setAttribute("data-tabsmith-action", action);
     Object.assign(b.style, {
-      background: primary ? accent : "transparent",
-      border: primary ? "0" : `1px solid ${border}`,
-      color: primary ? "#ffffff" : fg,
+      background: opts.primary ? accent : "transparent",
+      border: opts.primary ? "0" : `1px solid ${border}`,
+      color: opts.primary ? "#ffffff" : fg,
       padding: "6px 12px",
       borderRadius: "6px",
       fontSize: "12px",
       cursor: "pointer",
       fontFamily: "inherit",
-      fontWeight: primary ? "600" : "500",
+      fontWeight: opts.primary ? "600" : "500",
       lineHeight: "1",
+      opacity: opts.ghost ? "0.85" : "1",
     });
     return b;
   };
-  buttonRow.appendChild(makeBtn("Snooze 1h", "snooze-60"));
-  buttonRow.appendChild(makeBtn("Tomorrow", "snooze-1440"));
+
+  // Top-2 presets as quick buttons (matches the OS notification button row).
+  const quickPresets = payload.presets.slice(0, 2);
+  for (const p of quickPresets) {
+    const btn = makeBtn(p.label, `snooze-${p.minutes}`);
+    buttonRow.appendChild(btn);
+  }
+
+  // "More…" dropdown for the rest plus Custom — only render if there's
+  // anything past the first two presets, or always to expose Custom.
+  const moreBtn = makeBtn("More ▾", "more", { ghost: true });
+  buttonRow.appendChild(moreBtn);
+
   const spacer = document.createElement("div");
   spacer.style.flex = "1";
   buttonRow.appendChild(spacer);
-  buttonRow.appendChild(makeBtn("Got it", "ack", true));
+  buttonRow.appendChild(makeBtn("Got it", "ack", { primary: true }));
   card.appendChild(buttonRow);
 
-  // Footer attribution
+  // --- More menu (hidden until More is clicked) -----------------------------
+  const moreMenu = document.createElement("div");
+  Object.assign(moreMenu.style, {
+    display: "none",
+    position: "absolute",
+    bottom: "100%",
+    left: "0",
+    marginBottom: "6px",
+    minWidth: "220px",
+    background: bg,
+    border: `1px solid ${border}`,
+    borderRadius: "8px",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
+    padding: "4px 0",
+    zIndex: "10",
+  });
+
+  // Remaining presets (skip the two already in the button row).
+  for (const p of payload.presets.slice(2)) {
+    const item = document.createElement("button");
+    item.setAttribute("data-tabsmith-action", `snooze-${p.minutes}`);
+    Object.assign(item.style, {
+      display: "flex",
+      justifyContent: "space-between",
+      width: "100%",
+      background: "transparent",
+      border: "0",
+      color: fg,
+      padding: "7px 12px",
+      fontSize: "12.5px",
+      fontFamily: "inherit",
+      cursor: "pointer",
+      textAlign: "left",
+    });
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = p.label;
+    const minSpan = document.createElement("span");
+    minSpan.textContent = `${p.minutes}m`;
+    Object.assign(minSpan.style, { color: muted, fontSize: "10px" });
+    item.appendChild(labelSpan);
+    item.appendChild(minSpan);
+    item.onmouseenter = () => (item.style.background = surfaceMuted);
+    item.onmouseleave = () => (item.style.background = "transparent");
+    moreMenu.appendChild(item);
+  }
+
+  // Custom row at the bottom.
+  const customSeparator = document.createElement("div");
+  Object.assign(customSeparator.style, {
+    height: "1px",
+    background: border,
+    margin: "4px 0",
+  });
+  moreMenu.appendChild(customSeparator);
+
+  const customRow = document.createElement("div");
+  Object.assign(customRow.style, {
+    padding: "8px 12px",
+    background: surfaceMuted,
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  });
+  const customLabel = document.createElement("div");
+  customLabel.textContent = "Custom snooze";
+  Object.assign(customLabel.style, {
+    fontSize: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    color: muted,
+  });
+  customRow.appendChild(customLabel);
+
+  const inputRow = document.createElement("div");
+  Object.assign(inputRow.style, { display: "flex", gap: "4px", alignItems: "center" });
+
+  // Pre-fill from lastCustomMinutes if present.
+  const last = payload.lastCustomMinutes ?? 60;
+  let initialValue = last;
+  let initialUnit: "minutes" | "hours" | "days" | "weeks" = "minutes";
+  if (last >= 60 * 24 * 7 && last % (60 * 24 * 7) === 0) {
+    initialUnit = "weeks";
+    initialValue = last / (60 * 24 * 7);
+  } else if (last >= 60 * 24 && last % (60 * 24) === 0) {
+    initialUnit = "days";
+    initialValue = last / (60 * 24);
+  } else if (last >= 60 && last % 60 === 0) {
+    initialUnit = "hours";
+    initialValue = last / 60;
+  }
+
+  const valueInput = document.createElement("input");
+  valueInput.type = "number";
+  valueInput.min = "0.1";
+  valueInput.value = String(initialValue);
+  Object.assign(valueInput.style, {
+    width: "70px",
+    background: bg,
+    color: fg,
+    border: `1px solid ${border}`,
+    borderRadius: "6px",
+    padding: "5px 8px",
+    fontSize: "12px",
+    fontFamily: "inherit",
+    textAlign: "right",
+  });
+
+  const unitSelect = document.createElement("select");
+  for (const u of ["minutes", "hours", "days", "weeks"]) {
+    const opt = document.createElement("option");
+    opt.value = u;
+    opt.textContent = u;
+    if (u === initialUnit) opt.selected = true;
+    unitSelect.appendChild(opt);
+  }
+  Object.assign(unitSelect.style, {
+    flex: "1",
+    background: bg,
+    color: fg,
+    border: `1px solid ${border}`,
+    borderRadius: "6px",
+    padding: "5px 8px",
+    fontSize: "12px",
+    fontFamily: "inherit",
+  });
+
+  const setBtn = document.createElement("button");
+  setBtn.textContent = "Set";
+  setBtn.setAttribute("data-tabsmith-action", "snooze-custom");
+  Object.assign(setBtn.style, {
+    background: accent,
+    border: "0",
+    color: "#ffffff",
+    padding: "5px 12px",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  });
+  inputRow.appendChild(valueInput);
+  inputRow.appendChild(unitSelect);
+  inputRow.appendChild(setBtn);
+  customRow.appendChild(inputRow);
+  moreMenu.appendChild(customRow);
+  buttonRow.appendChild(moreMenu);
+
+  // --- Footer attribution ---------------------------------------------------
   const footer = document.createElement("div");
   footer.textContent = "Tabsmith reminder";
   Object.assign(footer.style, {
@@ -189,32 +358,89 @@ export function bannerInjector(payload: BannerPayload) {
     setTimeout(() => root.remove(), 220);
   }
 
+  function snoozeCustomFromInput() {
+    const raw = Number(valueInput.value);
+    if (!isFinite(raw) || raw <= 0) return;
+    const unitToMin: Record<string, number> = {
+      minutes: 1,
+      hours: 60,
+      days: 60 * 24,
+      weeks: 60 * 24 * 7,
+    };
+    const minutes = raw * unitToMin[unitSelect.value];
+    if (minutes < 0.1 || minutes > 60 * 24 * 365) return;
+    try {
+      // Snooze and remember as the user's preferred default — two messages
+      // so the prefs:update doesn't block the snooze on a slow worker.
+      chrome.runtime.sendMessage({
+        type: "reminders:snoozeFromBanner",
+        id: payload.reminderId,
+        deltaMinutes: minutes,
+      });
+      chrome.runtime.sendMessage({
+        type: "prefs:update",
+        patch: { lastSnoozeMinutes: minutes },
+      });
+    } catch {
+      // worker may be suspended; ignore
+    }
+    dismiss();
+  }
+
   root.addEventListener("click", (e) => {
     const target = e.target as HTMLElement | null;
     const actionEl = target?.closest<HTMLElement>("[data-tabsmith-action]");
     const action = actionEl?.dataset.tabsmithAction;
     if (!action) return;
-    if (action === "snooze-60" || action === "snooze-1440") {
-      const delta = action === "snooze-60" ? 60 : 24 * 60;
-      try {
-        chrome.runtime.sendMessage({
-          type: "reminders:snoozeFromBanner",
-          id: payload.reminderId,
-          deltaMinutes: delta,
-        });
-      } catch {
-        // service worker may have suspended; ignore
+
+    if (action === "more") {
+      e.stopPropagation();
+      moreMenu.style.display = moreMenu.style.display === "block" ? "none" : "block";
+      return;
+    }
+
+    if (action === "snooze-custom") {
+      e.stopPropagation();
+      snoozeCustomFromInput();
+      return;
+    }
+
+    if (action.startsWith("snooze-")) {
+      const minutes = Number(action.slice("snooze-".length));
+      if (isFinite(minutes) && minutes > 0) {
+        try {
+          chrome.runtime.sendMessage({
+            type: "reminders:snoozeFromBanner",
+            id: payload.reminderId,
+            deltaMinutes: minutes,
+          });
+        } catch {
+          // ignore
+        }
+        dismiss();
       }
-    } else {
-      try {
-        chrome.runtime.sendMessage({
-          type: "reminders:acknowledge",
-          id: payload.reminderId,
-        });
-      } catch {
-        // ignore
-      }
+      return;
+    }
+
+    // ack, close
+    try {
+      chrome.runtime.sendMessage({
+        type: "reminders:acknowledge",
+        id: payload.reminderId,
+      });
+    } catch {
+      // ignore
     }
     dismiss();
+  });
+
+  // Stop dropdown from closing on input focus
+  valueInput.addEventListener("click", (e) => e.stopPropagation());
+  unitSelect.addEventListener("click", (e) => e.stopPropagation());
+  valueInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      snoozeCustomFromInput();
+    }
   });
 }

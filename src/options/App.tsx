@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
-import { Sparkles } from "@/components/Icon";
-import type { Preferences, ThemeMode } from "@/types";
+import { Sparkles, Plus, Trash } from "@/components/Icon";
+import { DEFAULT_SNOOZE_PRESETS, formatMinutes } from "@/shared/snooze";
+import type { Preferences, SnoozePreset, ThemeMode } from "@/types";
 
 export function App() {
   useTheme();
@@ -30,6 +31,10 @@ export function App() {
 
         <Section title="Appearance">
           <ThemePicker />
+        </Section>
+
+        <Section title="Reminder snooze">
+          <SnoozePresetsEditor />
         </Section>
 
         <Section title="Notifications">
@@ -480,6 +485,196 @@ function ThemePicker() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function SnoozePresetsEditor() {
+  const prefs = useAsync(() => send({ type: "prefs:get" }), []);
+  const [draft, setDraft] = useState<SnoozePreset[]>([]);
+  const [status, setStatus] = useState<"idle" | "saved">("idle");
+  const [newLabel, setNewLabel] = useState("");
+  const [newMinutes, setNewMinutes] = useState<number | "">("");
+
+  useEffect(() => {
+    if (prefs.data?.snoozePresets) setDraft(prefs.data.snoozePresets);
+  }, [prefs.data?.snoozePresets]);
+
+  const persist = async (next: SnoozePreset[]) => {
+    setDraft(next);
+    await send({ type: "prefs:update", patch: { snoozePresets: next } });
+    setStatus("saved");
+    setTimeout(() => setStatus("idle"), 1200);
+  };
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= draft.length) return;
+    const next = draft.slice();
+    [next[idx], next[j]] = [next[j], next[idx]];
+    persist(next);
+  };
+
+  const remove = (idx: number) => {
+    if (draft.length <= 1) return; // schema enforces min 1
+    persist(draft.filter((_, i) => i !== idx));
+  };
+
+  const add = () => {
+    if (!newLabel.trim() || !newMinutes || Number(newMinutes) <= 0) return;
+    if (draft.length >= 8) return;
+    const next = [...draft, { label: newLabel.trim(), minutes: Number(newMinutes) }];
+    persist(next);
+    setNewLabel("");
+    setNewMinutes("");
+  };
+
+  if (!prefs.data) return null;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-[12px] text-ink-faint leading-relaxed">
+        These appear in the snooze dropdown across the side panel, the in-page
+        banner, and the popup. The <strong>top two</strong> are also used as
+        the action buttons on the OS notification — drag the order to put your
+        favorites there.
+      </p>
+
+      <ul className="space-y-1.5">
+        {draft.map((p, i) => (
+          <li
+            key={`${p.label}-${i}`}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-surface"
+          >
+            <span
+              className="text-[10px] tabular-nums text-ink-faint w-6 shrink-0 text-center"
+              title="Position in the snooze list"
+            >
+              {i + 1}
+            </span>
+            <input
+              value={p.label}
+              onChange={(e) => {
+                const next = draft.slice();
+                next[i] = { ...next[i], label: e.target.value };
+                setDraft(next);
+              }}
+              onBlur={() => persist(draft)}
+              className="flex-1 bg-transparent text-[13px] text-ink outline-none
+                border-b border-transparent focus:border-accent/40 py-0.5"
+              maxLength={24}
+            />
+            <input
+              type="number"
+              value={p.minutes}
+              min={0.1}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!isFinite(v) || v <= 0) return;
+                const next = draft.slice();
+                next[i] = { ...next[i], minutes: v };
+                setDraft(next);
+              }}
+              onBlur={() => persist(draft)}
+              className="w-20 px-2 py-1 text-[12.5px] text-right tabular-nums rounded
+                border border-border bg-surface outline-none focus:focus-ring"
+            />
+            <span className="text-[11px] text-ink-faint w-14">
+              {formatMinutes(p.minutes)}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => move(i, -1)}
+                disabled={i === 0}
+                aria-label="Move up"
+                className="p-1 text-ink-faint hover:text-ink disabled:opacity-30"
+              >
+                ↑
+              </button>
+              <button
+                onClick={() => move(i, 1)}
+                disabled={i === draft.length - 1}
+                aria-label="Move down"
+                className="p-1 text-ink-faint hover:text-ink disabled:opacity-30"
+              >
+                ↓
+              </button>
+              <button
+                onClick={() => remove(i)}
+                disabled={draft.length <= 1}
+                aria-label="Delete preset"
+                className="p-1 text-ink-faint hover:text-red-500 disabled:opacity-30"
+              >
+                <Trash width={12} height={12} />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="flex items-center gap-2 pt-1">
+        <input
+          placeholder="Label (e.g. 'After lunch')"
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          maxLength={24}
+          className="flex-1 px-2.5 py-1.5 text-[12.5px] rounded-md border border-border
+            bg-surface placeholder:text-ink-faint outline-none focus:focus-ring"
+        />
+        <input
+          type="number"
+          placeholder="min"
+          value={newMinutes}
+          onChange={(e) => setNewMinutes(e.target.value === "" ? "" : Number(e.target.value))}
+          min={0.1}
+          className="w-24 px-2.5 py-1.5 text-[12.5px] text-right tabular-nums rounded-md
+            border border-border bg-surface placeholder:text-ink-faint outline-none focus:focus-ring"
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={add}
+          disabled={!newLabel.trim() || !newMinutes || draft.length >= 8}
+          leadingIcon={<Plus width={12} height={12} />}
+        >
+          Add
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between text-[11px]">
+        {status === "saved" ? <Pill tone="success">Saved</Pill> : <span />}
+        <button
+          className="text-ink-muted hover:text-ink"
+          onClick={() => persist(DEFAULT_SNOOZE_PRESETS)}
+        >
+          Reset to defaults
+        </button>
+      </div>
+
+      {prefs.data.lastSnoozeMinutes !== undefined ? (
+        <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 px-3 py-2 text-[11.5px] text-ink-muted">
+          Your last custom snooze was{" "}
+          <strong className="text-ink">
+            {formatMinutes(prefs.data.lastSnoozeMinutes)}
+          </strong>
+          . It pre-fills the Custom field on every surface.
+          <button
+            className="ml-2 text-ink-faint hover:text-ink underline"
+            onClick={async () => {
+              // structured-clone preserves `undefined` over chrome.runtime,
+              // and PreferencesRepo.update spreads the patch — so this
+              // clears the saved value cleanly.
+              await send({
+                type: "prefs:update",
+                patch: { lastSnoozeMinutes: undefined },
+              });
+              prefs.refresh();
+            }}
+          >
+            forget it
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

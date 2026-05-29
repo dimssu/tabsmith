@@ -3,6 +3,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useBroadcast } from "@/hooks/useBroadcast";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { SnoozePicker } from "@/components/SnoozePicker";
 import { EmptyState } from "@/components/EmptyState";
 import { Bell, ExternalLink, Trash } from "@/components/Icon";
 import { Pill } from "@/components/Pill";
@@ -83,17 +84,26 @@ export function ReminderList({ onChanged }: Props) {
                 </span>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Delete reminder"
-              onClick={async () => {
-                await send({ type: "reminders:delete", id: r.id });
-                list.refresh();
-              }}
-            >
-              <Trash width={13} height={13} />
-            </Button>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Delete reminder"
+                onClick={async () => {
+                  await send({ type: "reminders:delete", id: r.id });
+                  list.refresh();
+                }}
+              >
+                <Trash width={13} height={13} />
+              </Button>
+              {/* Snooze is useful for both pending and already-fired reminders —
+                  for fired ones it acts as a 'put it back on the schedule'. */}
+              <SnoozePicker
+                reminderId={r.id}
+                onSnoozed={() => list.refresh()}
+                label={r.fired ? "Reschedule" : "Snooze"}
+              />
+            </div>
           </Card>
         </li>
       ))}

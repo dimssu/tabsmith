@@ -2,6 +2,7 @@ import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { useBroadcast } from "@/hooks/useBroadcast";
 import { Button } from "@/components/Button";
+import { SnoozePicker } from "@/components/SnoozePicker";
 import { Bell, Check, ExternalLink } from "@/components/Icon";
 import { favicon, relativeTime, shortHost } from "@/shared/utils";
 
@@ -82,7 +83,7 @@ export function MissedReminders({ onChanged }: { onChanged: () => void }) {
                 </p>
               ) : null}
             </div>
-            <div className="flex flex-col gap-1 shrink-0">
+            <div className="flex flex-col gap-1 shrink-0 items-end">
               <Button
                 variant="primary"
                 size="sm"
@@ -95,21 +96,13 @@ export function MissedReminders({ onChanged }: { onChanged: () => void }) {
               >
                 Got it
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={async () => {
-                  await send({
-                    type: "reminders:snoozeFromBanner",
-                    id: r.id,
-                    deltaMinutes: 60,
-                  });
+              <SnoozePicker
+                reminderId={r.id}
+                onSnoozed={() => {
                   missed.refresh();
                   onChanged();
                 }}
-              >
-                Snooze 1h
-              </Button>
+              />
             </div>
           </li>
         ))}

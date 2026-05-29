@@ -1,9 +1,10 @@
-import { RemindersRepo, NotesRepo } from "@/storage";
+import { RemindersRepo, NotesRepo, PreferencesRepo } from "@/storage";
 import { normalizeUrl } from "@/engine";
 import { broadcast } from "@/messaging/client";
 import { refreshBadge } from "./badge";
 import { bannerInjector, type BannerPayload } from "./banner";
-import type { RecurrenceKind } from "@/types";
+import { DEFAULT_SNOOZE_PRESETS } from "@/shared/snooze";
+import type { RecurrenceKind, SnoozePreset } from "@/types";
 
 // Accent color used for the in-page banner accent stripe — keep in sync
 // with the --accent CSS variable in src/styles/tokens.css.
@@ -11,12 +12,14 @@ const BANNER_ACCENT_RGB = "90 84 220";
 
 const ALARM_PREFIX = "reminder:";
 
-// Notification button indices. Order matters — Chrome calls
-// onButtonClicked with the index from this list.
-const SNOOZE_BUTTONS = [
-  { title: "Snooze 1h", deltaMinutes: 60 },
-  { title: "Tomorrow", deltaMinutes: 60 * 24 },
-] as const;
+// Chrome notifications only support 2 buttons, so we use the user's top-2
+// snooze presets. Resolved at fire-time so changes in Options take effect
+// immediately without needing a restart.
+async function getNotificationButtons(): Promise<SnoozePreset[]> {
+  const prefs = await PreferencesRepo.get();
+  const presets = prefs.snoozePresets.length > 0 ? prefs.snoozePresets : DEFAULT_SNOOZE_PRESETS;
+  return presets.slice(0, 2);
+}
 
 export async function scheduleReminder(
   url: string,
@@ -89,9 +92,14 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
         : "Time to revisit this tab.";
   const title = reminder.titleHint?.trim() || "Tabsmith reminder";
 
+  // Resolve the user's snooze presets once for both surfaces.
+  const prefs = await PreferencesRepo.get();
+  const presets =
+    prefs.snoozePresets.length > 0 ? prefs.snoozePresets : DEFAULT_SNOOZE_PRESETS;
+  const notificationButtons = presets.slice(0, 2);
+
   // 1) Try a persistent OS notification. requireInteraction keeps it on
-  //    screen until the user dismisses it (instead of auto-fading after
-  //    a few seconds).
+  //    screen until the user dismisses it.
   try {
     await chrome.notifications.create(`reminder:${id}`, {
       type: "basic",
@@ -100,22 +108,30 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
       message,
       priority: 2,
       requireInteraction: true,
-      buttons: SNOOZE_BUTTONS.map((b) => ({ title: b.title })),
+      buttons: notificationButtons.map((b) => ({ title: `Snooze ${b.label}` })),
+    });
+    // Stash the presets so the button-click handler knows what they mean
+    // (Chrome only gives us the index, not the original button title).
+    await chrome.storage.session.set({
+      [`notif:reminder:${id}:presets`]: notificationButtons,
     });
   } catch (err) {
     console.warn("[tabsmith] OS notification failed", err);
   }
 
-  // 2) Inject an in-page banner. This is the workhorse — it shows up even
-  //    when OS notifications are blocked or DND is on, and gives the user
-  //    explicit Snooze / Got it controls right where their attention is.
+  // 2) Inject an in-page banner.
   if (targetTabId !== undefined) {
-    await injectBanner(targetTabId, {
+    const bannerPayload: BannerPayload = {
       reminderId: id,
       title,
       body: message,
       accentRgb: BANNER_ACCENT_RGB,
-    });
+      presets,
+      ...(prefs.lastSnoozeMinutes !== undefined
+        ? { lastCustomMinutes: prefs.lastSnoozeMinutes }
+        : {}),
+    };
+    await injectBanner(targetTabId, bannerPayload);
   }
 
   // 3) Stash the target so the click handler can focus it
@@ -222,12 +238,21 @@ export async function handleNotificationButtonClick(
 ): Promise<void> {
   if (!notificationId.startsWith("reminder:")) return;
   const id = notificationId.slice("reminder:".length);
-  const button = SNOOZE_BUTTONS[buttonIndex];
+
+  // Look up the presets we used when creating this notification; fall back
+  // to the live user preferences if the session record is gone.
+  const presetsKey = `${notificationId}:presets`;
+  const stash = await chrome.storage.session.get(presetsKey);
+  let presets = stash[presetsKey] as SnoozePreset[] | undefined;
+  if (!presets || presets.length === 0) {
+    presets = await getNotificationButtons();
+  }
+  const button = presets[buttonIndex];
   if (!button) return;
 
   const existing = await RemindersRepo.get(id);
   if (existing) {
-    await snoozeReminder(id, button.deltaMinutes);
+    await snoozeReminder(id, button.minutes);
   } else {
     // Original reminder was already deleted; spawn a fresh one tied to the
     // notification so the user's snooze still works.
@@ -245,7 +270,7 @@ export async function handleNotificationButtonClick(
       }
     }
     if (url) {
-      await scheduleReminder(url, Date.now() + button.deltaMinutes * 60 * 1000, {
+      await scheduleReminder(url, Date.now() + button.minutes * 60 * 1000, {
         titleHint: title,
       });
     }
@@ -253,6 +278,7 @@ export async function handleNotificationButtonClick(
     await chrome.notifications.clear(notificationId);
     await refreshBadge();
   }
+  await chrome.storage.session.remove(presetsKey);
 }
 
 function nextOccurrence(prev: number, kind: RecurrenceKind): number {
