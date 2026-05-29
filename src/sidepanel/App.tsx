@@ -9,6 +9,7 @@ import { SuggestionsList } from "./SuggestionsList";
 import { CurrentNote } from "./CurrentNote";
 import { GroupOverview } from "./GroupOverview";
 import { ReminderList } from "./ReminderList";
+import { MissedReminders } from "./MissedReminders";
 import { TabBar, type TabKey } from "./TabBar";
 
 export function App() {
@@ -131,6 +132,8 @@ export function App() {
       />
 
       <main className="flex-1 px-4 pb-6 pt-3 space-y-4 scrollbar-thin overflow-y-auto">
+        <MissedReminders onChanged={refresh} />
+
         {tab === "suggestions" ? (
           <SuggestionsList
             data={suggestions.data ?? []}

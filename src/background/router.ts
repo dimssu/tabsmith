@@ -16,7 +16,12 @@ import type {
 } from "@/messaging/contracts";
 import { broadcast } from "@/messaging/client";
 import { applySuggestion, analyzeFullWindow, dismissSuggestion } from "./suggest";
-import { cancelReminder, scheduleReminder } from "./reminders";
+import {
+  acknowledgeReminder,
+  cancelReminder,
+  scheduleReminder,
+  snoozeReminder,
+} from "./reminders";
 import { refreshBadge } from "./badge";
 import type { Suggestion } from "@/types";
 
@@ -92,6 +97,20 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
 
     case "reminders:delete":
       await cancelReminder(msg.id);
+      return { ok: true } as Response<M>;
+
+    case "reminders:acknowledge":
+      await acknowledgeReminder(msg.id);
+      return { ok: true } as Response<M>;
+
+    case "reminders:acknowledgeAll": {
+      const unacked = await RemindersRepo.unacknowledged();
+      for (const r of unacked) await acknowledgeReminder(r.id);
+      return { acknowledged: unacked.length } as Response<M>;
+    }
+
+    case "reminders:snoozeFromBanner":
+      await snoozeReminder(msg.id, msg.deltaMinutes);
       return { ok: true } as Response<M>;
 
     case "groups:listForCurrentWindow":

@@ -23,6 +23,11 @@ export const ReminderSchema = z.object({
   recurrence: RecurrenceKindSchema.optional(),
   // Counter for diagnostics; bumps by 1 each time a recurring reminder fires.
   fireCount: z.number().int().nonnegative().default(0),
+  // When the user explicitly acknowledged the fire (clicked "Got it" in the
+  // banner / notification, or dismissed from the Missed list). Used to keep
+  // the badge and the side-panel callout honest when the OS notification is
+  // suppressed or the user just stepped away.
+  acknowledgedAt: z.number().int().nonnegative().optional(),
 });
 export type Reminder = z.infer<typeof ReminderSchema>;
 

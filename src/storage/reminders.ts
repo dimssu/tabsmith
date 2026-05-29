@@ -57,12 +57,31 @@ export const RemindersRepo = {
   async reschedule(id: string, fireAt: number): Promise<void> {
     const existing = await this.get(id);
     if (!existing) return;
-    await driver.set(key(id), {
+    const next: Reminder = {
       ...existing,
       fireAt,
       fired: false,
       fireCount: existing.fireCount + 1,
-    });
+    };
+    // Snoozing/rescheduling clears the acknowledgment — the next fire will
+    // need a fresh acknowledgment.
+    delete (next as { acknowledgedAt?: number }).acknowledgedAt;
+    await driver.set(key(id), next);
+  },
+
+  async acknowledge(id: string): Promise<void> {
+    const existing = await this.get(id);
+    if (!existing) return;
+    await driver.set(key(id), { ...existing, acknowledgedAt: Date.now() });
+  },
+
+  // Reminders that have fired and the user hasn't acknowledged yet —
+  // recurring reminders never accumulate here because they reschedule
+  // instead of marking fired.
+  async unacknowledged(): Promise<Reminder[]> {
+    return (await this.list()).filter(
+      (r) => r.fired && r.acknowledgedAt === undefined,
+    );
   },
 
   async delete(id: string): Promise<void> {

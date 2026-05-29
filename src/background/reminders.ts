@@ -1,7 +1,13 @@
 import { RemindersRepo, NotesRepo } from "@/storage";
 import { normalizeUrl } from "@/engine";
 import { broadcast } from "@/messaging/client";
+import { refreshBadge } from "./badge";
+import { bannerInjector, type BannerPayload } from "./banner";
 import type { RecurrenceKind } from "@/types";
+
+// Accent color used for the in-page banner accent stripe — keep in sync
+// with the --accent CSS variable in src/styles/tokens.css.
+const BANNER_ACCENT_RGB = "90 84 220";
 
 const ALARM_PREFIX = "reminder:";
 
@@ -71,34 +77,105 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
     if (opened.id !== undefined) targetTabId = opened.id;
   }
 
-  // Notification — clicking opens the tab; the action buttons snooze.
+  // Build the message we'll use across both the OS notification and the
+  // in-page banner — keep them in sync.
   const note = await NotesRepo.get(reminder.url);
   const message = reminder.note?.trim()
     ? reminder.note
     : note?.body?.trim()
-      ? truncate(note.body, 120)
+      ? truncate(note.body, 200)
       : reminder.recurrence && reminder.recurrence !== "none"
         ? `Recurring reminder · ${recurrenceLabel(reminder.recurrence)}`
         : "Time to revisit this tab.";
+  const title = reminder.titleHint?.trim() || "Tabsmith reminder";
 
-  await chrome.notifications.create(`reminder:${id}`, {
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("src/assets/icon-128.png"),
-    title: reminder.titleHint?.trim() || "Tabsmith reminder",
-    message,
-    priority: 1,
-    requireInteraction: false,
-    buttons: SNOOZE_BUTTONS.map((b) => ({ title: b.title })),
-  });
+  // 1) Try a persistent OS notification. requireInteraction keeps it on
+  //    screen until the user dismisses it (instead of auto-fading after
+  //    a few seconds).
+  try {
+    await chrome.notifications.create(`reminder:${id}`, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("src/assets/icon-128.png"),
+      title,
+      message,
+      priority: 2,
+      requireInteraction: true,
+      buttons: SNOOZE_BUTTONS.map((b) => ({ title: b.title })),
+    });
+  } catch (err) {
+    console.warn("[tabsmith] OS notification failed", err);
+  }
 
-  // Stash the target so the click handler can focus it
+  // 2) Inject an in-page banner. This is the workhorse — it shows up even
+  //    when OS notifications are blocked or DND is on, and gives the user
+  //    explicit Snooze / Got it controls right where their attention is.
+  if (targetTabId !== undefined) {
+    await injectBanner(targetTabId, {
+      reminderId: id,
+      title,
+      body: message,
+      accentRgb: BANNER_ACCENT_RGB,
+    });
+  }
+
+  // 3) Stash the target so the click handler can focus it
   if (targetTabId !== undefined) {
     await chrome.storage.session.set({ [`notif:reminder:${id}`]: targetTabId });
   }
+
+  // 4) Side panel callout / badge refresh — handled by reminders:changed
+  //    broadcast above plus the badge update.
+  await refreshBadge();
+}
+
+async function injectBanner(tabId: number, payload: BannerPayload): Promise<void> {
+  // The target tab may have just been created and not finished loading; wait
+  // briefly until status === 'complete' before injecting so the banner has a
+  // <body> to attach to.
+  const ready = await waitForTabReady(tabId, 5_000);
+  if (!ready) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: bannerInjector,
+      args: [payload],
+    });
+  } catch (err) {
+    // chrome://, edge://, the web store, and other restricted pages reject
+    // scripting injection. The badge + side-panel callout still cover us.
+    console.warn("[tabsmith] banner injection failed", err);
+  }
+}
+
+async function waitForTabReady(tabId: number, timeoutMs: number): Promise<boolean> {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab.status === "complete") return true;
+  } catch {
+    return false;
+  }
+  return new Promise((resolve) => {
+    const onUpdated = (
+      updatedTabId: number,
+      info: chrome.tabs.TabChangeInfo,
+    ) => {
+      if (updatedTabId === tabId && info.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(onUpdated);
+        clearTimeout(timer);
+        resolve(true);
+      }
+    };
+    const timer = setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+      resolve(false);
+    }, timeoutMs);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+  });
 }
 
 export async function handleNotificationClick(notificationId: string): Promise<void> {
   if (!notificationId.startsWith("reminder:")) return;
+  const id = notificationId.slice("reminder:".length);
   const stored = await chrome.storage.session.get(`notif:${notificationId}`);
   const tabId = stored[`notif:${notificationId}`] as number | undefined;
   if (typeof tabId === "number") {
@@ -114,6 +191,29 @@ export async function handleNotificationClick(notificationId: string): Promise<v
     await chrome.storage.session.remove(`notif:${notificationId}`);
   }
   await chrome.notifications.clear(notificationId);
+  // Clicking the notification counts as acknowledgment.
+  await acknowledgeReminder(id);
+}
+
+export async function acknowledgeReminder(id: string): Promise<void> {
+  await RemindersRepo.acknowledge(id);
+  broadcast({ type: "reminders:changed" });
+  await refreshBadge();
+}
+
+export async function snoozeReminder(
+  id: string,
+  deltaMinutes: number,
+): Promise<void> {
+  const existing = await RemindersRepo.get(id);
+  const fireAt = Date.now() + deltaMinutes * 60 * 1000;
+  if (existing) {
+    await RemindersRepo.reschedule(id, fireAt);
+    await chrome.alarms.create(`${ALARM_PREFIX}${id}`, { when: fireAt });
+  }
+  await chrome.notifications.clear(`reminder:${id}`);
+  broadcast({ type: "reminders:changed" });
+  await refreshBadge();
 }
 
 export async function handleNotificationButtonClick(
@@ -125,13 +225,9 @@ export async function handleNotificationButtonClick(
   const button = SNOOZE_BUTTONS[buttonIndex];
   if (!button) return;
 
-  // Snooze: schedule a brand-new alarm for the same reminder url, push the
-  // existing reminder forward (rescheduling keeps history compact).
   const existing = await RemindersRepo.get(id);
-  const fireAt = Date.now() + button.deltaMinutes * 60 * 1000;
   if (existing) {
-    await RemindersRepo.reschedule(id, fireAt);
-    await chrome.alarms.create(`${ALARM_PREFIX}${id}`, { when: fireAt });
+    await snoozeReminder(id, button.deltaMinutes);
   } else {
     // Original reminder was already deleted; spawn a fresh one tied to the
     // notification so the user's snooze still works.
@@ -148,10 +244,15 @@ export async function handleNotificationButtonClick(
         // tab is gone; we'll fall through to the no-op below
       }
     }
-    if (url) await scheduleReminder(url, fireAt, { titleHint: title });
+    if (url) {
+      await scheduleReminder(url, Date.now() + button.deltaMinutes * 60 * 1000, {
+        titleHint: title,
+      });
+    }
+    broadcast({ type: "reminders:changed" });
+    await chrome.notifications.clear(notificationId);
+    await refreshBadge();
   }
-  broadcast({ type: "reminders:changed" });
-  await chrome.notifications.clear(notificationId);
 }
 
 function nextOccurrence(prev: number, kind: RecurrenceKind): number {
