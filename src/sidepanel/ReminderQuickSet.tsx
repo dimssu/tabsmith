@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { send } from "@/messaging/client";
 import type { RecurrenceKind } from "@/types";
 
@@ -26,6 +26,7 @@ export function ReminderQuickSet({ url, titleHint, onCreated }: Props) {
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState<string | null>(null);
   const [recurrence, setRecurrence] = useState<RecurrenceKind>("none");
+  const [testCountdown, setTestCountdown] = useState<number | null>(null);
 
   const create = async (mins: number, label: string) => {
     setBusy(true);
@@ -44,6 +45,38 @@ export function ReminderQuickSet({ url, titleHint, onCreated }: Props) {
       setBusy(false);
     }
   };
+
+  const fireTestReminder = async () => {
+    if (busy || testCountdown !== null) return;
+    setBusy(true);
+    try {
+      // 10 seconds out. Recurrence is intentionally not applied to the test —
+      // a recurring test would be annoying.
+      await send({
+        type: "reminders:create",
+        url,
+        fireAt: Date.now() + 10_000,
+        ...(titleHint ? { titleHint: `[Test] ${titleHint}` } : { titleHint: "[Test] Tabsmith demo reminder" }),
+        note: "This is a test reminder so you can see how Tabsmith notifies you. The Snooze buttons on this notification really work.",
+      });
+      onCreated?.();
+      // Live countdown so it's obvious something is in flight.
+      setTestCountdown(10);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Drive the countdown display
+  useEffect(() => {
+    if (testCountdown === null) return;
+    if (testCountdown <= 0) {
+      const t = setTimeout(() => setTestCountdown(null), 1500);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setTestCountdown((n) => (n === null ? null : n - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [testCountdown]);
 
   return (
     <div className="space-y-2.5">
@@ -92,6 +125,26 @@ export function ReminderQuickSet({ url, titleHint, onCreated }: Props) {
             </button>
           );
         })}
+      </div>
+
+      <div className="pt-1 border-t border-dashed border-border/60 flex items-center justify-between gap-2">
+        <button
+          onClick={fireTestReminder}
+          disabled={busy || testCountdown !== null}
+          className="text-[11px] text-ink-muted hover:text-ink inline-flex items-center gap-1.5
+            disabled:opacity-60 disabled:hover:text-ink-muted transition-colors"
+          title="Schedule a reminder 10 seconds from now to see how Tabsmith notifies you"
+        >
+          <span aria-hidden>⏱</span>
+          {testCountdown === null
+            ? "Try a 10-second test reminder"
+            : testCountdown > 0
+              ? `Test reminder fires in ${testCountdown}s…`
+              : "Test reminder firing now"}
+        </button>
+        {testCountdown !== null ? (
+          <span className="text-[10px] text-ink-faint">watch for a system notification</span>
+        ) : null}
       </div>
     </div>
   );

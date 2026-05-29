@@ -145,6 +145,10 @@ const FEATURE_GUIDE: FeatureGroup[] = [
         what: "Reminders survive browser restart — Chrome's alarms API persists them.",
       },
       {
+        what: "Want to see exactly what happens on fire? Use the 10-second test reminder.",
+        how: "Side panel → Note tab → reminder section → 'Try a 10-second test reminder'. A real reminder is scheduled for the current tab and fires after the countdown, with snooze buttons that genuinely work.",
+      },
+      {
         what: "See the full list, sorted by fire time, with a click-through to delete each.",
         how: "Side panel → Reminders tab.",
       },
