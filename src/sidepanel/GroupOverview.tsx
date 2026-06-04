@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { send } from "@/messaging/client";
 import { useAsync } from "@/hooks/useAsync";
 import { useBroadcast } from "@/hooks/useBroadcast";
-import { Card } from "@/components/Card";
 import { EmptyState } from "@/components/EmptyState";
 import { Layers } from "@/components/Icon";
 import { cn } from "@/shared/utils";
@@ -48,7 +47,7 @@ export function GroupOverview({ onChanged }: Props) {
     return (
       <div className="space-y-2 animate-pulse">
         {[0, 1].map((i) => (
-          <div key={i} className="h-12 rounded-xl bg-surface-muted border border-border" />
+          <div key={i} className="h-12 rounded-md bg-surface-muted border border-border" />
         ))}
       </div>
     );
@@ -65,9 +64,9 @@ export function GroupOverview({ onChanged }: Props) {
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="divide-y divide-border">
       {groups.data.map((g) => (
-        <li key={g.groupId}>
+        <li key={g.groupId} className="py-3 first:pt-1">
           <GroupRow
             groupId={g.groupId}
             title={g.title}
@@ -134,7 +133,7 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
   };
 
   return (
-    <Card className="p-3">
+    <div className="px-1">
       <div className="flex items-center gap-2.5">
         <div className="relative shrink-0">
           <button
@@ -192,14 +191,14 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
                 }
               }}
               placeholder="Group name"
-              className="w-full text-[13px] font-medium text-ink bg-transparent
+              className="w-full text-sm font-semibold text-ink bg-transparent
                 border-b border-accent outline-none py-0.5"
             />
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="text-[13px] font-medium text-ink truncate text-left
-                hover:text-accent transition-colors block w-full"
+              className="text-sm font-semibold text-ink truncate text-left
+                hover:text-accent transition-colors duration-160 block w-full"
               title="Click to rename"
             >
               {title?.trim() || (
@@ -207,11 +206,11 @@ function GroupRow({ groupId, title, color, memberCount, onChanged }: RowProps) {
               )}
             </button>
           )}
-          <div className="text-[11px] text-ink-faint">
+          <div className="text-xs text-ink-faint tabular-nums">
             {memberCount} {memberCount === 1 ? "tab" : "tabs"}
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

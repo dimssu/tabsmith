@@ -2,48 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens. Source values are OKLCH (perceptually consistent); the
+ * RGB triples below are approximations written as space-separated channels
+ * so Tailwind's alpha-modifier syntax (bg-surface/40) keeps working.
+ *
+ * Warm-tinted neutrals (hue ≈ 60, very low chroma) carry every surface.
+ * A single muted clay accent (hue ≈ 38) does work for primary action,
+ * selection, and brand recognition only — never decoration.
+ */
+
 @layer base {
-  /* Light theme — default. */
+  /* Light — warm paper */
   :root,
   html[data-theme="light"] {
-    --surface: 252 252 253;
-    --surface-muted: 244 244 247;
-    --surface-subtle: 234 235 240;
-    --ink: 18 18 22;
-    --ink-muted: 82 84 94;
-    --ink-faint: 138 140 152;
-    --accent: 90 84 220;
-    --accent-soft: 235 233 252;
-    --border: 225 226 232;
+    /* surfaces */
+    --surface:        252 251 248; /* oklch(0.985 0.005 60) */
+    --surface-muted:  245 244 240; /* oklch(0.965 0.006 60) */
+    --surface-subtle: 236 234 229; /* oklch(0.94  0.008 60) */
+
+    /* ink */
+    --ink:        37 32 27;        /* oklch(0.21 0.012 60) */
+    --ink-muted:  108 102 94;      /* oklch(0.46 0.012 60) */
+    --ink-faint:  151 144 135;     /* oklch(0.62 0.012 60) */
+
+    /* brand accent — clay */
+    --accent:        193 99 56;    /* oklch(0.56 0.13 38) */
+    --accent-soft:   245 226 215;  /* oklch(0.94 0.04 38) */
+    --accent-ink:    255 255 252;  /* readable on filled clay */
+
+    /* structure */
+    --border:        227 224 218;  /* oklch(0.9 0.008 60) */
+    --border-strong: 207 202 193;  /* oklch(0.8 0.01 60) */
+
+    /* state */
+    --danger:        217 89 73;    /* oklch(0.58 0.18 27) */
+    --danger-soft:   249 224 219;
+    --success:       115 168 124;  /* oklch(0.62 0.13 150) */
+    --success-soft:  227 240 226;
+    --warning:       204 168 71;   /* oklch(0.74 0.14 76) */
+    --warning-soft:  244 234 207;
+    --info:          110 142 175;
+    --info-soft:     224 232 240;
+
+    color-scheme: light;
   }
 
-  /* Dark via system preference (only when no explicit override is set). */
+  /* Dark via system preference (only when no explicit override) */
   @media (prefers-color-scheme: dark) {
     html:not([data-theme]) {
-      --surface: 14 14 18;
-      --surface-muted: 22 22 28;
-      --surface-subtle: 32 33 40;
-      --ink: 240 240 244;
-      --ink-muted: 170 172 184;
-      --ink-faint: 110 112 124;
-      --accent: 142 134 255;
-      --accent-soft: 40 36 78;
-      --border: 44 45 54;
+      --surface:        32 29 25;
+      --surface-muted:  42 38 33;
+      --surface-subtle: 56 51 45;
+
+      --ink:        247 245 241;
+      --ink-muted:  188 181 171;
+      --ink-faint:  135 128 118;
+
+      --accent:        215 153 105;  /* oklch(0.72 0.12 40) — lighter for legibility */
+      --accent-soft:   78 53 41;
+      --accent-ink:    25 22 18;
+
+      --border:        69 63 57;
+      --border-strong: 92 84 76;
+
+      --danger:        224 117 102;
+      --danger-soft:   78 39 34;
+      --success:       145 190 152;
+      --success-soft:  43 64 51;
+      --warning:       227 191 95;
+      --warning-soft:  74 60 31;
+      --info:          141 172 204;
+      --info-soft:     38 52 67;
+
+      color-scheme: dark;
     }
   }
 
-  /* Forced dark — beats the media query above by specificity (the explicit
-     attribute selector wins) and applies regardless of system setting. */
+  /* Forced dark override */
   html[data-theme="dark"] {
-    --surface: 14 14 18;
-    --surface-muted: 22 22 28;
-    --surface-subtle: 32 33 40;
-    --ink: 240 240 244;
-    --ink-muted: 170 172 184;
-    --ink-faint: 110 112 124;
-    --accent: 142 134 255;
-    --accent-soft: 40 36 78;
-    --border: 44 45 54;
+    --surface:        32 29 25;
+    --surface-muted:  42 38 33;
+    --surface-subtle: 56 51 45;
+
+    --ink:        247 245 241;
+    --ink-muted:  188 181 171;
+    --ink-faint:  135 128 118;
+
+    --accent:        215 153 105;
+    --accent-soft:   78 53 41;
+    --accent-ink:    25 22 18;
+
+    --border:        69 63 57;
+    --border-strong: 92 84 76;
+
+    --danger:        224 117 102;
+    --danger-soft:   78 39 34;
+    --success:       145 190 152;
+    --success-soft:  43 64 51;
+    --warning:       227 191 95;
+    --warning-soft:  74 60 31;
+    --info:          141 172 204;
+    --info-soft:     38 52 67;
+
+    color-scheme: dark;
+  }
+
+  /* Type stack — system-first with Inter as cross-platform target. */
+  html {
+    font-family:
+      "Inter Variable", "Inter",
+      -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+      Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings:
+      "cv11" on, "ss01" on, "ss03" on, "tnum" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   html,
@@ -52,10 +127,11 @@
   }
 
   body {
-    font-feature-settings: "cv11", "ss01", "ss03";
-    -webkit-font-smoothing: antialiased;
+    background: rgb(var(--surface));
+    color: rgb(var(--ink));
   }
 
+  /* Hairlines tinted toward the brand neutral, not pure grey. */
   * {
     border-color: rgb(var(--border));
   }
@@ -64,11 +140,22 @@
     background: rgb(var(--accent-soft));
     color: rgb(var(--ink));
   }
+
+  /* Respect user's motion preference globally. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
-  /* Typographic styles for rendered note Markdown. Kept compact — note view
-     is a sidebar pane, not a long-form reader. */
+  /* Typographic styles for rendered note Markdown. Compact, single column. */
   .prose-tabsmith :where(p) {
     margin-bottom: 0.5rem;
     line-height: 1.55;
@@ -94,16 +181,26 @@
   .prose-tabsmith :where(hr) {
     margin: 0.5rem 0;
   }
+
+  /* Logo wordmark — the dot on the 'i' is the clay accent. */
+  .wordmark-dot {
+    color: rgb(var(--accent));
+  }
 }
 
 @layer utilities {
-  .focus-ring {
-    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-surface;
+  /* Focus ring that survives every background by drawing outside the box.
+     Use focus-visible for keyboard-only. */
+  .focus-ring,
+  .focus-visible\:focus-ring:focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: inherit;
   }
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgb(var(--border)) transparent;
+    scrollbar-color: rgb(var(--border-strong)) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -112,7 +209,16 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgb(var(--border));
-    border-radius: 8px;
+    background-color: rgb(var(--border-strong));
+    border-radius: 9999px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--ink-faint));
+  }
+
+  /* Hairline used for low-emphasis dividers. */
+  .hairline {
+    box-shadow: 0 1px 0 rgb(var(--border));
   }
 }

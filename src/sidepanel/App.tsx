@@ -109,10 +109,10 @@ export function App() {
         <div
           role="status"
           aria-live="polite"
-          className={`mx-4 mt-3 px-3 py-2 rounded-lg text-[12px] leading-snug
+          className={`mx-4 mt-3 px-3 py-2 rounded-md text-sm leading-snug
             border animate-slide-up ${
               toast.tone === "success"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                ? "bg-success-soft border-success/30 text-success"
                 : "bg-surface-muted border-border text-ink-muted"
             }`}
         >
@@ -158,28 +158,33 @@ export function App() {
         ) : null}
       </main>
 
-      <footer className="px-4 py-3 border-t border-border text-[11px] text-ink-faint flex items-center justify-between gap-2">
-        <span className="truncate">
-          Tabsmith · 100% on-device
+      <footer className="px-4 py-2.5 border-t border-border text-2xs text-ink-faint flex items-center justify-between gap-3 bg-surface">
+        <span className="truncate inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block w-1 h-1 rounded-full bg-success"
+            title="100% on-device"
+          />
+          on-device
           {windowId !== undefined ? (
-            <span className="ml-2 opacity-60">· window #{windowId}</span>
+            <span className="text-ink-faint/60 tabular-nums">· w{windowId}</span>
           ) : null}
         </span>
         <div className="flex items-center gap-3 shrink-0">
           <button
-            className="text-ink-muted hover:text-ink inline-flex items-center gap-1"
+            className="text-ink-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
             onClick={() => setPaletteOpen(true)}
             title="Open command palette"
           >
-            <kbd className="border border-border rounded px-1">⌘K</kbd>
+            <kbd className="font-sans border border-border rounded px-1 py-px text-2xs text-ink-faint">⌘K</kbd>
             Search
           </button>
           <button
-            className="text-ink-muted hover:text-ink"
+            className="text-ink-muted hover:text-ink transition-colors"
             onClick={() => chrome.runtime.openOptionsPage()}
             title="Open the full guide, preferences, and data tools"
           >
-            Guide &amp; Options
+            Guide
           </button>
         </div>
       </footer>

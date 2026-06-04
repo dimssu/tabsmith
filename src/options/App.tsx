@@ -4,7 +4,8 @@ import { useAsync } from "@/hooks/useAsync";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
-import { Sparkles, Plus, Trash } from "@/components/Icon";
+import { Lockup } from "@/components/Logo";
+import { Plus, Trash } from "@/components/Icon";
 import { DEFAULT_SNOOZE_PRESETS, formatMinutes } from "@/shared/snooze";
 import type { Preferences, SnoozePreset, ThemeMode } from "@/types";
 
@@ -14,11 +15,21 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-        <header className="flex items-center gap-2.5">
-          <Sparkles width={18} height={18} className="text-accent" />
-          <h1 className="text-[18px] font-semibold tracking-tight">Tabsmith — Options</h1>
-          <Pill tone="neutral" className="ml-auto">100% on-device</Pill>
+      <div className="max-w-2xl mx-auto px-6 py-10 space-y-10">
+        <header className="flex items-end justify-between gap-3 border-b border-border pb-5">
+          <div className="flex flex-col gap-2">
+            <Lockup size="lg" />
+            <p className="text-sm text-ink-muted">
+              Privacy-first tab grouping, reminders, and contextual notes.
+            </p>
+          </div>
+          <Pill tone="success" className="mb-1">
+            <span
+              aria-hidden
+              className="inline-block w-1 h-1 rounded-full bg-success mr-0.5"
+            />
+            on-device
+          </Pill>
         </header>
 
         <FeatureGuide />
@@ -60,8 +71,10 @@ export function App() {
           </p>
         </Section>
 
-        <footer className="text-[11px] text-ink-faint pt-2">
-          v0.1.0 · MIT licensed
+        <footer className="text-2xs text-ink-faint pt-2 flex items-center gap-2 tabular-nums">
+          <span>v0.1.0</span>
+          <span aria-hidden>·</span>
+          <span>MIT licensed</span>
         </footer>
       </div>
     </div>
@@ -71,10 +84,12 @@ export function App() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-[12px] uppercase tracking-[0.08em] text-ink-faint font-semibold">
+      <h2 className="text-2xs uppercase tracking-[0.12em] text-ink-faint font-semibold">
         {title}
       </h2>
-      <div className="rounded-xl border border-border bg-surface-muted/40 p-5">{children}</div>
+      <div className="rounded-md border border-border bg-surface-muted p-5">
+        {children}
+      </div>
     </section>
   );
 }
@@ -250,7 +265,7 @@ function FeatureGuide() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface-muted/40 overflow-hidden">
+      <div className="rounded-md border border-border bg-surface-muted overflow-hidden">
         {FEATURE_GUIDE.map((group, i) => {
           const expanded = openIdx === -1 ? true : openIdx === i;
           return (

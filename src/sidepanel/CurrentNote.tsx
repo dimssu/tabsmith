@@ -132,10 +132,10 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
         {readMode && draft.trim() ? (
           <button
             onClick={() => setReadMode(false)}
-            className="w-full min-h-[160px] px-3.5 py-3 text-[13px] leading-relaxed
-              bg-surface-muted/60 border border-border rounded-xl text-left
-              prose-tabsmith hover:border-accent/30 transition-colors cursor-text
-              outline-none focus-visible:focus-ring"
+            className="w-full min-h-[160px] px-3.5 py-3 text-sm leading-relaxed
+              bg-surface-muted border border-border rounded-md text-left
+              prose-tabsmith hover:border-border-strong transition-colors duration-160
+              cursor-text outline-none focus-visible:focus-ring"
             aria-label="Edit note"
             // Markdown renderer escapes input + only emits known-safe tags;
             // see src/shared/markdown.ts and its tests.
@@ -153,19 +153,19 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
               // Auto-flip back to read mode on blur if there's something to render.
               if (prefs.data?.noteReadModeDefault && draft.trim()) setReadMode(true);
             }}
-            placeholder="Why did I open this? Where did I stop? What's next?  Markdown supported."
-            className="w-full min-h-[160px] px-3.5 py-3 text-[13px] leading-relaxed
-              bg-surface-muted/60 border border-border rounded-xl
+            placeholder="Why did I open this? Where did I stop? What's next?"
+            className="w-full min-h-[160px] px-3.5 py-3 text-sm leading-relaxed
+              bg-surface-muted border border-border rounded-md
               placeholder:text-ink-faint resize-y focus:focus-ring outline-none
-              scrollbar-thin font-mono"
+              scrollbar-thin"
           />
         )}
-        <div className="absolute bottom-2 right-3 flex items-center gap-2 text-[10px] text-ink-faint">
+        <div className="absolute bottom-2 right-3 flex items-center gap-2 text-2xs text-ink-faint">
           {draft.trim() ? (
             <button
               onClick={() => setReadMode((r) => !r)}
-              className="px-1.5 py-[2px] rounded border border-border bg-surface
-                hover:text-ink transition-colors"
+              className="px-1.5 py-px rounded border border-border bg-surface
+                hover:text-ink transition-colors duration-160"
               aria-pressed={!!readMode}
               title={readMode ? "Switch to edit mode" : "Switch to read mode"}
             >
@@ -178,18 +178,16 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
             </span>
           ) : null}
           {saving === "saving" ? <span>Saving…</span> : null}
-          {saving === "saved" ? (
-            <Pill tone="success" className="!text-[9px]">
-              saved
-            </Pill>
-          ) : null}
+          {saving === "saved" ? <Pill tone="success">saved</Pill> : null}
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface-muted/40 p-3.5 space-y-2">
+      <div className="border-t border-border pt-4 space-y-2.5">
         <div className="flex items-center gap-2">
-          <Bell width={13} height={13} className="text-ink-muted" />
-          <h3 className="text-[12px] font-semibold text-ink">Remind me about this tab</h3>
+          <Bell width={13} height={13} className="text-ink-faint" />
+          <h3 className="text-xs font-semibold text-ink uppercase tracking-[0.06em]">
+            Remind me about this tab
+          </h3>
         </div>
         <ReminderQuickSet
           url={url}

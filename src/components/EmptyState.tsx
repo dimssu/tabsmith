@@ -9,25 +9,31 @@ interface Props {
   className?: string;
 }
 
+/**
+ * Empty states teach the interface. No card wrap, no border — the page is
+ * the container. A small leading mark in muted ink anchors the headline,
+ * helper text reads as prose underneath.
+ */
 export function EmptyState({ icon, title, body, hint, className }: Props) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center text-center gap-3 px-6 py-10 rounded-xl",
-        "bg-surface-muted/40 border border-dashed border-border/60",
+        "flex flex-col items-start text-left gap-3 px-1 py-8 max-w-prose",
         className,
       )}
     >
       {icon ? (
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-subtle text-ink-muted">
+        <div className="text-ink-faint opacity-80 transition-colors duration-160">
           {icon}
         </div>
       ) : null}
       <div className="space-y-1.5">
-        <h3 className="text-[13px] font-semibold text-ink">{title}</h3>
-        {body ? <p className="text-[12px] text-ink-muted leading-relaxed max-w-[28ch]">{body}</p> : null}
+        <h3 className="text-md font-semibold text-ink leading-tight">{title}</h3>
+        {body ? (
+          <p className="text-sm text-ink-muted leading-relaxed">{body}</p>
+        ) : null}
       </div>
-      {hint ? <div className="text-[11px] text-ink-faint">{hint}</div> : null}
+      {hint ? <div className="text-xs text-ink-faint mt-1">{hint}</div> : null}
     </div>
   );
 }

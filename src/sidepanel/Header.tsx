@@ -1,6 +1,6 @@
 import { Button } from "@/components/Button";
-import { Pill } from "@/components/Pill";
-import { Refresh, Sparkles } from "@/components/Icon";
+import { LogoMark, Wordmark } from "@/components/Logo";
+import { Refresh } from "@/components/Icon";
 
 interface Props {
   currentTabTitle: string;
@@ -12,20 +12,24 @@ export function Header({ currentTabTitle, onAnalyze, suggestionCount }: Props) {
   return (
     <header className="px-4 pt-4 pb-3 border-b border-border bg-surface sticky top-0 z-10">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Sparkles width={16} height={16} className="text-accent" />
-            <h1 className="text-[15px] font-semibold tracking-tight text-ink">
-              Tabsmith
-            </h1>
+            <LogoMark size={20} />
+            <Wordmark size="md" />
             {suggestionCount > 0 ? (
-              <Pill tone="accent">
-                {suggestionCount} {suggestionCount === 1 ? "idea" : "ideas"}
-              </Pill>
+              <span
+                className="ml-1 text-2xs tabular-nums text-ink-faint"
+                aria-label={`${suggestionCount} pending suggestion${suggestionCount === 1 ? "" : "s"}`}
+              >
+                {suggestionCount}
+              </span>
             ) : null}
           </div>
           {currentTabTitle ? (
-            <p className="mt-1.5 text-[12px] text-ink-muted truncate" title={currentTabTitle}>
+            <p
+              className="mt-2 text-xs text-ink-muted truncate font-medium"
+              title={currentTabTitle}
+            >
               {currentTabTitle}
             </p>
           ) : null}

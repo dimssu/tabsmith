@@ -134,22 +134,22 @@ export function CommandPalette({ open, onClose, windowId }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-xl border border-border bg-surface
+        className="w-full max-w-md rounded-lg border border-border bg-surface
           shadow-2xl overflow-hidden animate-slide-up"
       >
-        <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
-          <span className="text-ink-faint" aria-hidden>
+        <div className="px-3 py-3 border-b border-border flex items-center gap-2.5">
+          <kbd className="font-sans text-2xs text-ink-faint border border-border rounded px-1.5 py-px">
             ⌘K
-          </span>
+          </kbd>
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Search tabs, notes, reminders, recently closed…"
+            placeholder="Search tabs, notes, reminders, recently closed"
             aria-label="Search"
-            className="flex-1 bg-transparent outline-none text-[13px] placeholder:text-ink-faint"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-ink-faint"
           />
-          <kbd className="text-[10px] text-ink-faint border border-border rounded px-1.5 py-[1px]">
+          <kbd className="font-sans text-2xs text-ink-faint border border-border rounded px-1.5 py-px">
             esc
           </kbd>
         </div>

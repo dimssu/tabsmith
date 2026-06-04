@@ -4,7 +4,8 @@ import { useAsync } from "@/hooks/useAsync";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Pill } from "@/components/Pill";
-import { Bell, ExternalLink, Layers, Sparkles, StickyNote } from "@/components/Icon";
+import { Lockup } from "@/components/Logo";
+import { Bell, ExternalLink, Layers, StickyNote } from "@/components/Icon";
 import { ReminderQuickSet } from "@/sidepanel/ReminderQuickSet";
 import { debounce, favicon, shortHost } from "@/shared/utils";
 
@@ -19,10 +20,9 @@ export function App() {
 
   return (
     <div className="bg-surface text-ink min-h-[280px]">
-      <div className="px-4 pt-3.5 pb-2 flex items-center gap-2 border-b border-border">
-        <Sparkles width={14} height={14} className="text-accent" />
-        <h1 className="text-[13px] font-semibold tracking-tight">Tabsmith</h1>
-        <Pill tone="neutral" className="ml-auto">on-device</Pill>
+      <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between border-b border-border">
+        <Lockup size="sm" />
+        <Pill tone="neutral">on-device</Pill>
       </div>
 
       {current.data ? (
@@ -30,21 +30,21 @@ export function App() {
           <img
             src={favicon(url)}
             alt=""
-            className="w-5 h-5 rounded shrink-0 bg-surface-subtle"
+            className="w-5 h-5 rounded-sm shrink-0 bg-surface-subtle"
             onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")}
           />
           <div className="min-w-0 flex-1">
-            <div className="text-[12px] font-medium truncate" title={current.data.title}>
+            <div className="text-sm font-semibold truncate" title={current.data.title}>
               {current.data.title || "Untitled"}
             </div>
-            <div className="text-[11px] text-ink-faint truncate flex items-center gap-1">
+            <div className="text-xs text-ink-faint truncate flex items-center gap-1 mt-0.5">
               {shortHost(url)}
               {url ? (
                 <a
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-ink-faint hover:text-ink"
+                  className="text-ink-faint hover:text-ink transition-colors"
                 >
                   <ExternalLink width={10} height={10} />
                 </a>
@@ -66,9 +66,9 @@ export function App() {
         )}
       </div>
 
-      <div className="px-4 pb-3 pt-1 border-t border-border flex items-center justify-between">
+      <div className="px-4 pb-3 pt-2 border-t border-border flex items-center justify-between">
         <button
-          className="text-[11px] text-ink-faint hover:text-ink"
+          className="text-xs text-ink-faint hover:text-ink transition-colors"
           onClick={async () => {
             const win = await chrome.windows.getCurrent();
             if (win.id !== undefined) {
@@ -80,10 +80,10 @@ export function App() {
           Open side panel →
         </button>
         <button
-          className="text-[11px] text-ink-faint hover:text-ink"
+          className="text-xs text-ink-faint hover:text-ink transition-colors"
           onClick={() => chrome.runtime.openOptionsPage()}
         >
-          Options
+          Guide &amp; options
         </button>
       </div>
     </div>
@@ -134,15 +134,16 @@ function MenuButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="text-left px-3 py-2.5 rounded-lg border border-border bg-surface-muted/40
+      className="text-left px-3 py-2.5 rounded-md border border-border bg-surface
         hover:bg-surface-muted disabled:opacity-50 disabled:cursor-not-allowed
-        transition-colors group"
+        focus-visible:focus-ring outline-none
+        transition-colors duration-160"
     >
       <div className="flex items-center gap-2.5">
-        <span className="text-accent">{icon}</span>
+        <span className="text-ink-muted">{icon}</span>
         <div className="min-w-0">
-          <div className="text-[12.5px] font-medium text-ink leading-tight">{label}</div>
-          <div className="text-[11px] text-ink-faint mt-0.5">{sub}</div>
+          <div className="text-sm font-semibold text-ink leading-tight">{label}</div>
+          <div className="text-xs text-ink-faint mt-0.5">{sub}</div>
         </div>
       </div>
     </button>

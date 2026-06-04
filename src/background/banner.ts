@@ -69,11 +69,10 @@ export function bannerInjector(payload: BannerPayload) {
     background: bg,
     color: fg,
     border: `1px solid ${border}`,
-    borderLeft: `4px solid ${accent}`,
     borderRadius: "12px",
     padding: "14px 16px",
     boxShadow:
-      "0 16px 40px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.08)",
+      "0 18px 44px rgba(15, 15, 20, 0.22), 0 2px 8px rgba(15, 15, 20, 0.08)",
     fontSize: "13px",
     lineHeight: "1.5",
   });
@@ -86,11 +85,27 @@ export function bannerInjector(payload: BannerPayload) {
     gap: "8px",
     marginBottom: payload.body ? "8px" : "12px",
   });
-  const bell = document.createElement("span");
-  bell.textContent = "⏰";
-  bell.style.fontSize = "16px";
-  bell.setAttribute("aria-hidden", "true");
-  header.appendChild(bell);
+  // Small Tabsmith mark — same geometry as the action icon so the brand reads
+  // continuously from chrome's toolbar to the page surface.
+  const mark = document.createElement("span");
+  mark.setAttribute("aria-hidden", "true");
+  Object.assign(mark.style, {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "20px",
+    height: "20px",
+    flexShrink: "0",
+  });
+  mark.innerHTML =
+    '<svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">' +
+    `<path d="M9 5h14a2 2 0 0 1 2 2v3H7V7a2 2 0 0 1 2-2z" fill="${fg}" opacity="0.22"/>` +
+    `<rect x="7" y="9" width="18" height="11" rx="2" fill="${fg}" opacity="0.22"/>` +
+    `<path d="M11 11h10a2 2 0 0 1 2 2v2H9v-2a2 2 0 0 1 2-2z" fill="${accent}"/>` +
+    `<rect x="9" y="14" width="14" height="9" rx="2" fill="${accent}"/>` +
+    `<line x1="5" y1="26.5" x2="27" y2="26.5" stroke="${fg}" stroke-width="1.25" stroke-linecap="round" opacity="0.5"/>` +
+    "</svg>";
+  header.appendChild(mark);
 
   const titleEl = document.createElement("strong");
   titleEl.textContent = payload.title;
@@ -339,14 +354,14 @@ export function bannerInjector(payload: BannerPayload) {
 
   // --- Footer attribution ---------------------------------------------------
   const footer = document.createElement("div");
-  footer.textContent = "Tabsmith reminder";
+  footer.textContent = "tabsmith · reminder";
   Object.assign(footer.style, {
     color: muted,
     fontSize: "10px",
-    marginTop: "10px",
-    opacity: "0.7",
-    letterSpacing: "0.04em",
-    textTransform: "uppercase",
+    marginTop: "12px",
+    opacity: "0.75",
+    letterSpacing: "0.02em",
+    fontWeight: "500",
   });
   card.appendChild(footer);
 
