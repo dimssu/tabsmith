@@ -19,6 +19,7 @@ import { applySuggestion, analyzeFullWindow, dismissSuggestion } from "./suggest
 import {
   acknowledgeReminder,
   cancelReminder,
+  openReminderSource,
   scheduleReminder,
   snoozeReminder,
 } from "./reminders";
@@ -111,6 +112,11 @@ async function handle<M extends Message>(msg: M): Promise<Response<M>> {
 
     case "reminders:snoozeFromBanner":
       await snoozeReminder(msg.id, msg.deltaMinutes);
+      return { ok: true } as Response<M>;
+
+    case "reminders:openSource":
+      await openReminderSource(msg.id);
+      await acknowledgeReminder(msg.id);
       return { ok: true } as Response<M>;
 
     case "groups:listForCurrentWindow":

@@ -14,6 +14,9 @@ export interface BannerPayload {
   presets: BannerSnoozePreset[];
   // Pre-filled when the user has a saved custom value
   lastCustomMinutes?: number;
+  // Whether the reminder has a navigable source URL — controls the
+  // "Open tab" action's visibility.
+  hasSource?: boolean;
 }
 
 // The injected function MUST be serializable for chrome.scripting.executeScript.
@@ -194,14 +197,22 @@ export function bannerInjector(payload: BannerPayload) {
     buttonRow.appendChild(btn);
   }
 
-  // "More…" dropdown for the rest plus Custom — only render if there's
-  // anything past the first two presets, or always to expose Custom.
+  // "More…" dropdown for the rest plus Custom.
   const moreBtn = makeBtn("More ▾", "more", { ghost: true });
   buttonRow.appendChild(moreBtn);
 
   const spacer = document.createElement("div");
   spacer.style.flex = "1";
   buttonRow.appendChild(spacer);
+
+  // "Open tab" — navigates to the reminder's source URL. Only shown if the
+  // reminder has a source. Without this, users on a different tab had no
+  // obvious path to reach the tab they wanted to be reminded about.
+  if (payload.hasSource) {
+    const openBtn = makeBtn("Open tab", "open");
+    buttonRow.appendChild(openBtn);
+  }
+
   buttonRow.appendChild(makeBtn("Got it", "ack", { primary: true }));
   card.appendChild(buttonRow);
 
@@ -434,6 +445,21 @@ export function bannerInjector(payload: BannerPayload) {
         }
         dismiss();
       }
+      return;
+    }
+
+    if (action === "open") {
+      // Navigate to the source tab. Acknowledgment happens server-side as
+      // part of the open flow so the badge clears too.
+      try {
+        chrome.runtime.sendMessage({
+          type: "reminders:openSource",
+          id: payload.reminderId,
+        });
+      } catch {
+        // ignore
+      }
+      dismiss();
       return;
     }
 

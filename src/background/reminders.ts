@@ -63,25 +63,29 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
   }
   broadcast({ type: "reminders:changed" });
 
-  // Try to focus an existing tab on the same normalized URL; else open one.
-  const normalized = normalizeUrl(reminder.url);
-  const matchingTabs = await chrome.tabs.query({});
-  const match = matchingTabs.find((t) => normalizeUrl(t.url ?? "") === normalized);
+  // Locate the user's currently-active tab (where their attention actually
+  // is right now). This is where the in-page banner goes — NOT the
+  // reminder's source tab, which may be in a different window or hidden.
+  // We never auto-focus or auto-open the source tab on fire; navigating
+  // there is opt-in via the banner / notification 'Open tab' action.
+  const focusedWindow = await chrome.windows
+    .getLastFocused({ windowTypes: ["normal"] })
+    .catch(() => null);
+  const activeTabs =
+    focusedWindow?.id !== undefined
+      ? await chrome.tabs.query({ active: true, windowId: focusedWindow.id })
+      : [];
+  const userActiveTab = activeTabs[0];
 
-  let targetTabId: number | undefined;
-  if (match?.id !== undefined) {
-    targetTabId = match.id;
-    if (match.windowId !== undefined) {
-      await chrome.windows.update(match.windowId, { focused: true });
-    }
-    await chrome.tabs.update(match.id, { active: true });
-  } else {
-    const opened = await chrome.tabs.create({ url: reminder.url, active: false });
-    if (opened.id !== undefined) targetTabId = opened.id;
-  }
+  // Separately find the reminder's source tab if it's still open anywhere.
+  const normalized = normalizeUrl(reminder.url);
+  const allTabs = await chrome.tabs.query({});
+  const sourceTab = allTabs.find(
+    (t) => normalizeUrl(t.url ?? "") === normalized,
+  );
 
   // Build the message we'll use across both the OS notification and the
-  // in-page banner — keep them in sync.
+  // in-page banner.
   const note = await NotesRepo.get(reminder.url);
   const message = reminder.note?.trim()
     ? reminder.note
@@ -98,8 +102,8 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
     prefs.snoozePresets.length > 0 ? prefs.snoozePresets : DEFAULT_SNOOZE_PRESETS;
   const notificationButtons = presets.slice(0, 2);
 
-  // 1) Try a persistent OS notification. requireInteraction keeps it on
-  //    screen until the user dismisses it.
+  // 1) OS notification — fires regardless of which window/app the user is in.
+  //    requireInteraction keeps it on screen until the user dismisses it.
   try {
     await chrome.notifications.create(`reminder:${id}`, {
       type: "basic",
@@ -110,8 +114,6 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
       requireInteraction: true,
       buttons: notificationButtons.map((b) => ({ title: `Snooze ${b.label}` })),
     });
-    // Stash the presets so the button-click handler knows what they mean
-    // (Chrome only gives us the index, not the original button title).
     await chrome.storage.session.set({
       [`notif:reminder:${id}:presets`]: notificationButtons,
     });
@@ -119,47 +121,70 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
     console.warn("[tabsmith] OS notification failed", err);
   }
 
-  // 2) Inject an in-page banner.
-  if (targetTabId !== undefined) {
-    const bannerPayload: BannerPayload = {
-      reminderId: id,
-      title,
-      body: message,
-      accentRgb: BANNER_ACCENT_RGB,
-      presets,
-      ...(prefs.lastSnoozeMinutes !== undefined
-        ? { lastCustomMinutes: prefs.lastSnoozeMinutes }
-        : {}),
-    };
-    await injectBanner(targetTabId, bannerPayload);
+  // 2) In-page banner — inject on whatever tab the user is currently looking
+  //    at. Fall back to the source tab only if the active tab is restricted
+  //    (chrome:// / extension:// / the web store all reject scripting).
+  const bannerPayload: BannerPayload = {
+    reminderId: id,
+    title,
+    body: message,
+    accentRgb: BANNER_ACCENT_RGB,
+    presets,
+    // Tell the banner whether an "Open tab" action makes sense.
+    hasSource: !!reminder.url,
+    ...(prefs.lastSnoozeMinutes !== undefined
+      ? { lastCustomMinutes: prefs.lastSnoozeMinutes }
+      : {}),
+  };
+
+  let bannerDelivered = false;
+  if (userActiveTab?.id !== undefined) {
+    bannerDelivered = await injectBanner(userActiveTab.id, bannerPayload);
+  }
+  // Belt-and-braces: if the user's current tab was restricted (chrome://,
+  // etc.) and the source tab is somewhere else and is a regular page, try
+  // there too. Better than no banner at all.
+  if (
+    !bannerDelivered &&
+    sourceTab?.id !== undefined &&
+    sourceTab.id !== userActiveTab?.id
+  ) {
+    await injectBanner(sourceTab.id, bannerPayload);
   }
 
-  // 3) Stash the target so the click handler can focus it
-  if (targetTabId !== undefined) {
-    await chrome.storage.session.set({ [`notif:reminder:${id}`]: targetTabId });
-  }
+  // 3) Persist what the notification click / banner 'Open tab' action will
+  //    need to navigate back to the source. We store the URL too in case
+  //    the source tab gets closed between fire and click.
+  await chrome.storage.session.set({
+    [`reminder:${id}:source`]: {
+      url: reminder.url,
+      tabId: sourceTab?.id,
+      windowId: sourceTab?.windowId,
+    },
+  });
 
-  // 4) Side panel callout / badge refresh — handled by reminders:changed
-  //    broadcast above plus the badge update.
+  // 4) Badge update + reminders:changed broadcast already fired above.
   await refreshBadge();
 }
 
-async function injectBanner(tabId: number, payload: BannerPayload): Promise<void> {
-  // The target tab may have just been created and not finished loading; wait
-  // briefly until status === 'complete' before injecting so the banner has a
-  // <body> to attach to.
+async function injectBanner(tabId: number, payload: BannerPayload): Promise<boolean> {
+  // The target tab may not be fully loaded yet (rare, but possible if the
+  // user just opened it). Wait briefly until status === 'complete' before
+  // injecting so the banner has a <body> to attach to.
   const ready = await waitForTabReady(tabId, 5_000);
-  if (!ready) return;
+  if (!ready) return false;
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
       func: bannerInjector,
       args: [payload],
     });
+    return true;
   } catch (err) {
     // chrome://, edge://, the web store, and other restricted pages reject
-    // scripting injection. The badge + side-panel callout still cover us.
+    // scripting injection. Caller can fall back to another tab.
     console.warn("[tabsmith] banner injection failed", err);
+    return false;
   }
 }
 
@@ -192,23 +217,51 @@ async function waitForTabReady(tabId: number, timeoutMs: number): Promise<boolea
 export async function handleNotificationClick(notificationId: string): Promise<void> {
   if (!notificationId.startsWith("reminder:")) return;
   const id = notificationId.slice("reminder:".length);
-  const stored = await chrome.storage.session.get(`notif:${notificationId}`);
-  const tabId = stored[`notif:${notificationId}`] as number | undefined;
-  if (typeof tabId === "number") {
+  // Clicking the body of the OS notification is the explicit "take me there"
+  // signal — that's when we actually navigate to the source tab.
+  await openReminderSource(id);
+  await chrome.notifications.clear(notificationId);
+  await acknowledgeReminder(id);
+}
+
+// Focus the reminder's source tab if it's still open, else open the URL in
+// the user's current window. Called from the OS-notification body click
+// and from the banner's "Open tab" action.
+export async function openReminderSource(id: string): Promise<void> {
+  const key = `reminder:${id}:source`;
+  const stash = await chrome.storage.session.get(key);
+  const source = stash[key] as
+    | { url?: string; tabId?: number; windowId?: number }
+    | undefined;
+  // Try the stashed tabId first (fastest path), then look up by normalized
+  // URL across all windows, then open a fresh tab.
+  if (source?.tabId !== undefined) {
     try {
-      const tab = await chrome.tabs.get(tabId);
+      const tab = await chrome.tabs.get(source.tabId);
       if (tab.windowId !== undefined) {
         await chrome.windows.update(tab.windowId, { focused: true });
       }
-      await chrome.tabs.update(tabId, { active: true });
+      await chrome.tabs.update(source.tabId, { active: true });
+      await chrome.storage.session.remove(key);
+      return;
     } catch {
-      // tab may have been closed; fall through
+      // tab is gone — fall through to URL lookup
     }
-    await chrome.storage.session.remove(`notif:${notificationId}`);
   }
-  await chrome.notifications.clear(notificationId);
-  // Clicking the notification counts as acknowledgment.
-  await acknowledgeReminder(id);
+  if (source?.url) {
+    const normalized = normalizeUrl(source.url);
+    const tabs = await chrome.tabs.query({});
+    const match = tabs.find((t) => normalizeUrl(t.url ?? "") === normalized);
+    if (match?.id !== undefined) {
+      if (match.windowId !== undefined) {
+        await chrome.windows.update(match.windowId, { focused: true });
+      }
+      await chrome.tabs.update(match.id, { active: true });
+    } else {
+      await chrome.tabs.create({ url: source.url, active: true });
+    }
+  }
+  await chrome.storage.session.remove(key);
 }
 
 export async function acknowledgeReminder(id: string): Promise<void> {

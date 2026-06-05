@@ -19,6 +19,7 @@ export type Message =
   | { type: "reminders:acknowledge"; id: string }
   | { type: "reminders:acknowledgeAll" }
   | { type: "reminders:snoozeFromBanner"; id: string; deltaMinutes: number }
+  | { type: "reminders:openSource"; id: string }
   | { type: "groups:listForCurrentWindow" }
   | { type: "groups:rename"; groupId: number; title: string }
   | { type: "groups:recolor"; groupId: number; color: string }
@@ -47,6 +48,7 @@ export type Response<M extends Message> =
   : M extends { type: "reminders:acknowledge" } ? { ok: true }
   : M extends { type: "reminders:acknowledgeAll" } ? { acknowledged: number }
   : M extends { type: "reminders:snoozeFromBanner" } ? { ok: true }
+  : M extends { type: "reminders:openSource" } ? { ok: true }
   : M extends { type: "groups:listForCurrentWindow" } ? GroupSummary[]
   : M extends { type: "groups:rename" } ? { ok: true }
   : M extends { type: "groups:recolor" } ? { ok: true }
