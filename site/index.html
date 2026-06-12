@@ -215,11 +215,18 @@
   }
   nav.links { display: flex; align-items: center; gap: 2px; }
   nav.links a {
+    position: relative;
     font-size: .88rem; font-weight: 500; color: rgb(var(--ink-muted));
     text-decoration: none; padding: 8px 12px; border-radius: 8px;
-    transition: color .16s var(--ease), background-color .16s var(--ease);
+    transition: color .16s var(--ease);
   }
-  nav.links a:hover { color: rgb(var(--ink)); background: rgb(var(--surface-muted)); }
+  nav.links a::after {
+    content: ""; position: absolute; left: 12px; right: 12px; bottom: 5px; height: 1.5px;
+    background: rgb(var(--accent)); transform: scaleX(0); transform-origin: 0 50%;
+    transition: transform .28s var(--ease-quint);
+  }
+  nav.links a:hover, nav.links a:focus-visible { color: rgb(var(--ink)); }
+  nav.links a:hover::after, nav.links a:focus-visible::after { transform: scaleX(1); }
   .nav-right { display: flex; align-items: center; gap: 10px; }
   .theme-btn {
     width: 38px; height: 38px; border-radius: 9px; border: 1px solid rgb(var(--border));
@@ -242,6 +249,13 @@
     .header-cta { padding: 9px 11px; }
   }
 
+  /* ---------- reading progress ---------- */
+  .progress {
+    position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+    background: rgb(var(--accent)); transform: scaleX(0); transform-origin: 0 50%;
+    z-index: 60; pointer-events: none;
+  }
+
   /* ---------- hero: the cover ---------- */
   .hero { position: relative; overflow: clip; }
   .hero-grid {
@@ -250,6 +264,13 @@
     padding-block: clamp(64px, 10vw, 132px) clamp(56px, 8vw, 110px);
   }
   .hero h1 .turn { color: rgb(var(--accent)); font-style: italic; font-weight: 500; }
+
+  /* load choreography: lines rise out of a masked slot, then the rest follows */
+  @keyframes rise-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+  .rise { opacity: 0; animation: rise-up .85s var(--ease-quint) var(--d, 0s) forwards; }
+  .hero h1 .line { display: block; overflow: hidden; }
+  .hero h1 .line-inner { display: block; transform: translateY(112%); animation: line-up 1s var(--ease-quint) var(--d, 0s) forwards; }
+  @keyframes line-up { to { transform: none; } }
   .hero .sub {
     font-size: clamp(1.04rem, 1.5vw, 1.2rem); line-height: 1.62;
     color: rgb(var(--ink-muted)); max-width: 50ch; margin: 26px 0 0;
@@ -283,6 +304,17 @@
     display: flex; flex-direction: column; justify-content: space-between;
     transform-style: preserve-3d;
   }
+  /* the sheet unfolds leaf by leaf, then each leaf floats on its own phase */
+  @keyframes unfold {
+    from { opacity: 0; transform: rotateX(-56deg) translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes leaf-idle { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+  .fold .leaf { opacity: 0; animation: unfold .85s var(--ease-quint) forwards, leaf-idle 4.6s ease-in-out infinite alternate; }
+  .fold .leaf:nth-child(1) { transform-origin: 85% 100%; animation-delay: .25s, 1.2s; }
+  .fold .leaf:nth-child(2) { transform-origin: 15% 100%; animation-delay: .42s, 1.7s; animation-duration: .85s, 5.4s; }
+  .fold .leaf:nth-child(3) { transform-origin: 85% 0%;  animation-delay: .59s, 1.45s; animation-duration: .85s, 5s; }
+  .fold .leaf:nth-child(4) { transform-origin: 50% 50%; animation-delay: .76s, 1.95s; animation-duration: .85s, 5.8s; }
   .leaf .leaf-cap {
     font-size: .72rem; font-weight: 600; letter-spacing: .04em;
     color: rgb(var(--ink-faint));
@@ -296,6 +328,7 @@
   .fold-caption {
     margin-top: 26px; font-family: var(--serif); font-style: italic;
     font-size: .92rem; color: rgb(var(--ink-faint)); text-align: center;
+    opacity: 0; animation: rise-up .85s var(--ease-quint) 1.35s forwards;
   }
 
   /* leaf vignettes */
@@ -315,7 +348,15 @@
     color: rgb(var(--accent-ink));
     display: flex; align-items: center; gap: 8px;
   }
-  .v-kbd span { font-size: .78rem; font-weight: 500; opacity: .75; letter-spacing: .02em; }
+  .v-kbd .type-wrap {
+    font-size: .78rem; font-weight: 500; opacity: .85; letter-spacing: .02em;
+    display: inline-flex; align-items: center; min-height: 1.2em;
+  }
+  .v-kbd .caret {
+    display: inline-block; width: 2px; height: 1.05em; margin-left: 2px;
+    background: rgb(var(--accent-ink)); animation: caret-blink 1.1s steps(2, jump-none) infinite;
+  }
+  @keyframes caret-blink { 50% { opacity: 0; } }
 
   /* ---------- trust strip ---------- */
   .trust { border-block: 1px solid rgb(var(--border)); }
@@ -454,15 +495,6 @@
   .in-view .ts-group { border-color: rgb(var(--panel-clay) / .6); background: rgb(var(--panel-clay) / .08); }
   .in-view .ts-pill { opacity: 1; transform: none; }
   .in-view .ts-tab.gh { background: rgb(var(--panel-clay) / .14); border-color: rgb(var(--panel-clay) / .45); color: rgb(var(--panel-ink)); }
-  .replay {
-    position: absolute; right: 14px; bottom: 12px;
-    display: inline-flex; align-items: center; gap: 6px;
-    font: inherit; font-size: .74rem; font-weight: 600;
-    color: rgb(var(--panel-fnt)); background: transparent; border: 0; cursor: pointer;
-    padding: 6px 8px; border-radius: 7px;
-    transition: color .16s var(--ease), background-color .16s var(--ease);
-  }
-  .replay:hover { color: rgb(var(--panel-ink)); background: rgb(var(--panel-edge) / .5); }
   .ch-mockwrap { position: relative; }
 
   /* reminders, chapter III */
@@ -647,10 +679,37 @@
     transition: opacity .7s var(--ease) calc(var(--i, 0) * 90ms),
                 transform .7s var(--ease-quint) calc(var(--i, 0) * 90ms);
   }
+
+  /* ---------- scroll-driven depth (Chrome-first, harmless elsewhere) ---------- */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .chapter .panel {
+        animation: parallax-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 5% exit 95%;
+      }
+      .hero-grid {
+        animation: hero-recede linear both;
+        animation-timeline: scroll();
+        animation-range: 0 85vh;
+      }
+      .end-grid {
+        animation: parallax-soft linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 55%;
+      }
+    }
+  }
+  @keyframes parallax-rise { from { transform: translateY(34px); } to { transform: translateY(-34px); } }
+  @keyframes hero-recede { to { opacity: .3; transform: translateY(-38px); } }
+  @keyframes parallax-soft { from { transform: translateY(40px); } to { transform: none; } }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; }
     .reveal.shown, .fold, .btn, .ts-tab, .ts-pill, .fired, .meter i, .faq-a { transition: none !important; }
     .in-view .fired, .in-view .ts-pill { transition: none !important; }
+    .rise, .hero h1 .line-inner, .fold .leaf, .fold-caption { animation: none !important; opacity: 1; transform: none; }
+    .v-kbd .caret { display: none; }
   }
 
   /* ---------- responsive ---------- */
@@ -674,6 +733,7 @@
   </style>
   </head>
 <body id="top">
+  <div class="progress" id="progress" aria-hidden="true"></div>
   <a class="skip" href="#main">Skip to content</a>
 
   <!-- ============================================== header ===== -->
@@ -716,24 +776,27 @@
       <div class="wrap">
         <div class="hero-grid">
           <div class="hero-copy">
-            <p class="folio reveal" style="margin:0 0 26px">A Chrome extension, bound in quarto</p>
-            <h1 class="reveal" style="--i:1">Tabs you can<br /><span class="turn">think</span> with.</h1>
-            <p class="sub reveal" style="--i:2">Quarto folds a noisy tab strip into labeled groups, quiet reminders, and a note for every page. All of it on your machine. None of it without your click.</p>
-            <div class="hero-cta reveal" style="--i:3">
+            <p class="folio rise" style="margin:0 0 26px; --d:.05s">A Chrome extension, bound in quarto</p>
+            <h1>
+              <span class="line"><span class="line-inner" style="--d:.12s">Tabs you can</span></span>
+              <span class="line"><span class="line-inner" style="--d:.24s"><span class="turn">think</span> with.</span></span>
+            </h1>
+            <p class="sub rise" style="--d:.42s">Quarto folds a noisy tab strip into labeled groups, quiet reminders, and a note for every page. All of it on your machine. None of it without your click.</p>
+            <div class="hero-cta rise" style="--d:.54s">
               <a class="btn btn-primary" href="#install" data-cta="hero" data-magnetic>
                 <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                 Add to Chrome
               </a>
               <a class="btn btn-ghost" href="#chapters">Read the chapters</a>
             </div>
-            <div class="hero-meta reveal" style="--i:4">
+            <div class="hero-meta rise" style="--d:.66s">
               <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Free</span>
               <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No account</span>
               <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Chrome 116+</span>
             </div>
           </div>
 
-          <div class="fold-scene reveal" style="--i:2">
+          <div class="fold-scene">
             <div>
               <div class="fold" id="fold" role="img" aria-label="Four paper leaves: a tab group pill, a reminder time, a margin note, and a command-K shortcut. One sheet folded into four capabilities.">
                 <div class="leaf">
@@ -756,7 +819,7 @@
                   <span class="leaf-cap">Recall</span>
                 </div>
                 <div class="leaf leaf-clay">
-                  <div class="v-kbd">⌘K <span>find anything</span></div>
+                  <div class="v-kbd">⌘K <span class="type-wrap"><span id="kbd-type">find anything</span><i class="caret" aria-hidden="true"></i></span></div>
                   <span class="leaf-cap">Find</span>
                 </div>
               </div>
@@ -770,7 +833,7 @@
     <!-- ============================================== trust ===== -->
     <section class="trust" aria-label="At a glance">
       <div class="wrap">
-        <div class="row">
+        <div class="row reveal">
           <span class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>100% on-device</span>
           <span class="sep" aria-hidden="true"></span>
           <span class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.36 5.64A9 9 0 1 1 5.64 18.36"/><path d="M2 2l20 20"/></svg>No telemetry</span>
@@ -832,10 +895,6 @@
                   </div>
                 </div>
               </div>
-              <button class="replay" type="button" data-replay aria-label="Replay the grouping animation">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M16 3l5 1-1 5"/></svg>
-                Replay
-              </button>
             </div>
           </article>
 
@@ -972,10 +1031,10 @@
             <p class="lede">The cheapest way to keep your browsing private is to never collect it. Quarto has no backend to send anything to. The clustering that feels smart runs in the extension's own service worker, on your machine, and stops there.</p>
 
             <div class="ledger" aria-label="The accounting">
-              <div class="ledger-row"><span class="k">Remote APIs</span><span class="v">none</span></div>
-              <div class="ledger-row"><span class="k">Trackers and analytics</span><span class="v">none</span></div>
-              <div class="ledger-row"><span class="k">Bytes synced to a server</span><span class="v tnum">0</span></div>
-              <div class="ledger-row"><span class="k">Where your data lives</span><span class="v clay">on your device</span></div>
+              <div class="ledger-row reveal" style="--i:2"><span class="k">Remote APIs</span><span class="v">none</span></div>
+              <div class="ledger-row reveal" style="--i:3"><span class="k">Trackers and analytics</span><span class="v">none</span></div>
+              <div class="ledger-row reveal" style="--i:4"><span class="k">Bytes synced to a server</span><span class="v tnum">0</span></div>
+              <div class="ledger-row reveal" style="--i:5"><span class="k">Where your data lives</span><span class="v clay">on your device</span></div>
             </div>
           </div>
 
@@ -1191,14 +1250,19 @@
       syncToggle();
     });
 
-    /* ---- header hairline on scroll ---- */
+    /* ---- header hairline + reading progress ---- */
     var header = document.querySelector("header.site");
+    var progress = document.getElementById("progress");
     function onScroll() {
-      if (window.scrollY > 8) header.classList.add("scrolled");
+      var y = window.scrollY;
+      if (y > 8) header.classList.add("scrolled");
       else header.classList.remove("scrolled");
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.transform = "scaleX(" + (max > 0 ? Math.min(y / max, 1) : 0) + ")";
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
 
     /* ---- reveal on scroll ---- */
     var revealed = document.querySelectorAll(".reveal");
@@ -1213,28 +1277,49 @@
       revealed.forEach(function (el) { el.classList.add("shown"); });
     }
 
-    /* ---- chapter demos play when seen ---- */
+    /* ---- chapter demos: play when seen, then loop while visible ---- */
     var demos = document.querySelectorAll(".panel.watch");
     if ("IntersectionObserver" in window && !reduce) {
-      var demoObs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add("in-view"); demoObs.unobserve(e.target); }
-        });
-      }, { threshold: 0.45 });
-      demos.forEach(function (el) { demoObs.observe(el); });
+      demos.forEach(function (panel, idx) {
+        var timer = null;
+        var period = 5200 + idx * 900;
+        var demoObs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              if (timer) return;
+              panel.classList.add("in-view");
+              timer = setInterval(function () {
+                panel.classList.remove("in-view");
+                setTimeout(function () { panel.classList.add("in-view"); }, 750);
+              }, period);
+            } else if (timer) {
+              clearInterval(timer);
+              timer = null;
+            }
+          });
+        }, { threshold: 0.4 });
+        demoObs.observe(panel);
+      });
     } else {
       demos.forEach(function (el) { el.classList.add("in-view"); });
     }
 
-    /* ---- replay buttons ---- */
-    document.querySelectorAll("[data-replay]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var panel = btn.parentElement.querySelector(".panel");
-        panel.classList.remove("in-view");
-        void panel.offsetWidth; /* restart transitions */
-        panel.classList.add("in-view");
-      });
-    });
+    /* ---- the clay leaf types what it would find ---- */
+    var typeEl = document.getElementById("kbd-type");
+    if (typeEl && !reduce) {
+      var phrases = ["find anything", "figma brief", "pr #42 review", "alarm edge case", "that one tab"];
+      var pi = 0, ci = phrases[0].length, deleting = true;
+      function tick() {
+        var p = phrases[pi];
+        ci += deleting ? -1 : 1;
+        typeEl.textContent = p.slice(0, ci);
+        var wait = deleting ? 42 : 92;
+        if (!deleting && ci === p.length) { wait = 2300; deleting = true; }
+        else if (deleting && ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; wait = 420; }
+        setTimeout(tick, wait);
+      }
+      setTimeout(tick, 2600); /* let the unfold finish first */
+    }
 
     /* ---- the fold: gentle pointer tilt ---- */
     var fold = document.getElementById("fold");
