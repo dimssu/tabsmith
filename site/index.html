@@ -336,8 +336,74 @@
     background: rgb(var(--accent-soft)); color: rgb(var(--accent-deep));
     font-size: .8rem; font-weight: 600; padding: 5px 11px; border-radius: 999px; }
   .v-group i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--accent)); }
-  .v-tabs { display: flex; gap: 5px; margin-top: 10px; }
-  .v-tab { height: 8px; border-radius: 4px; background: rgb(var(--border-strong)); flex: 1; }
+  /* the gather diorama: a cursor clicks, and the tabs are bound */
+  .gather-demo { --cycle: 7.5s; display: grid; gap: 11px; justify-items: start; }
+  .gd-pill { opacity: 0; transform: translateY(5px) scale(.92); animation: gd-pill-in var(--cycle) infinite; }
+  .gd-strip { display: flex; gap: 4%; width: 100%; }
+  .gd-tab { width: 22%; flex: none; height: 9px; border-radius: 4.5px; }
+  .gd-tab.plain { background: rgb(var(--border-strong)); animation: gd-shift-right var(--cycle) infinite; }
+  .gd-tab.gh { background: rgb(var(--accent) / .38); }
+  .gd-tab.g1 { animation: gd-tint var(--cycle) infinite; }
+  .gd-tab.g2, .gd-tab.g3 { animation: gd-shift-left var(--cycle) infinite; }
+  .gd-act { position: relative; display: inline-flex; }
+  .gd-btn {
+    font-size: .67rem; font-weight: 600; letter-spacing: .01em;
+    background: rgb(var(--accent)); color: rgb(var(--accent-ink));
+    padding: 5px 10px; border-radius: 7px;
+    animation: gd-btn-press var(--cycle) infinite;
+  }
+  .gd-ring {
+    position: absolute; left: 50%; top: 50%; width: 30px; height: 30px;
+    border: 1.5px solid rgb(var(--accent)); border-radius: 50%;
+    opacity: 0; transform: translate(-50%, -50%) scale(.3);
+    animation: gd-ring var(--cycle) infinite;
+  }
+  .gd-cursor {
+    position: absolute; left: 60%; top: 40%; z-index: 1;
+    animation: gd-cursor var(--cycle) infinite;
+    opacity: 0;
+  }
+  @keyframes gd-cursor {
+    0%, 16% { opacity: 0; transform: translate(48px, 44px); }
+    22% { opacity: 1; transform: translate(48px, 44px); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+    38% { opacity: 1; transform: translate(0, 0) scale(1); }
+    41% { transform: translate(0, 0) scale(.8); }
+    45% { transform: translate(0, 0) scale(1); }
+    72% { opacity: 1; transform: translate(0, 0); }
+    80%, 100% { opacity: 0; transform: translate(28px, 32px); }
+  }
+  @keyframes gd-btn-press {
+    0%, 38% { transform: none; opacity: 1; background: rgb(var(--accent)); }
+    41% { transform: scale(.92); background: rgb(var(--accent-deep)); }
+    46% { transform: none; background: rgb(var(--accent)); }
+    58%, 86% { opacity: .5; }
+    94%, 100% { opacity: 1; transform: none; }
+  }
+  @keyframes gd-ring {
+    0%, 40% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+    45% { opacity: .55; }
+    62%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+  }
+  @keyframes gd-shift-right {
+    0%, 44% { transform: none; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+    58%, 84% { transform: translateX(236%); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+    94%, 100% { transform: none; }
+  }
+  @keyframes gd-shift-left {
+    0%, 44% { transform: none; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+    58%, 84% { transform: translateX(-118%); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+    94%, 100% { transform: none; }
+  }
+  @keyframes gd-tint {
+    0%, 48% { background: rgb(var(--accent) / .38); }
+    58%, 84% { background: rgb(var(--accent) / .62); }
+    94%, 100% { background: rgb(var(--accent) / .38); }
+  }
+  @keyframes gd-pill-in {
+    0%, 48% { opacity: 0; transform: translateY(5px) scale(.92); }
+    58%, 84% { opacity: 1; transform: none; }
+    93%, 100% { opacity: 0; transform: translateY(5px) scale(.92); }
+  }
   .v-bell { color: rgb(var(--ink-muted)); }
   .v-time { font-size: .9rem; font-weight: 600; color: rgb(var(--ink)); }
   .v-time small { display: block; font-weight: 500; font-size: .74rem; color: rgb(var(--ink-faint)); margin-top: 2px; }
@@ -710,6 +776,12 @@
     .in-view .fired, .in-view .ts-pill { transition: none !important; }
     .rise, .hero h1 .line-inner, .fold .leaf, .fold-caption { animation: none !important; opacity: 1; transform: none; }
     .v-kbd .caret { display: none; }
+    .gather-demo * { animation: none !important; }
+    .gd-cursor, .gd-ring { display: none; }
+    .gd-pill { opacity: 1; transform: none; }
+    .gd-tab.plain { transform: translateX(236%); }
+    .gd-tab.g2, .gd-tab.g3 { transform: translateX(-118%); }
+    .gd-tab.gh { background: rgb(var(--accent) / .55); }
   }
 
   /* ---------- responsive ---------- */
@@ -798,11 +870,21 @@
 
           <div class="fold-scene">
             <div>
-              <div class="fold" id="fold" role="img" aria-label="Four paper leaves: a tab group pill, a reminder time, a margin note, and a command-K shortcut. One sheet folded into four capabilities.">
+              <div class="fold" id="fold" role="img" aria-label="Four paper leaves. In the first, a cursor clicks Create group and three scattered tabs slide together under a github pill. The others show a reminder time, a margin note, and a command-K shortcut.">
                 <div class="leaf">
-                  <div>
-                    <span class="v-group"><i></i>github · 5</span>
-                    <div class="v-tabs"><span class="v-tab"></span><span class="v-tab"></span><span class="v-tab"></span></div>
+                  <div class="gather-demo">
+                    <span class="v-group gd-pill"><i></i>github · 3</span>
+                    <div class="gd-strip">
+                      <span class="gd-tab gh g1"></span>
+                      <span class="gd-tab plain"></span>
+                      <span class="gd-tab gh g2"></span>
+                      <span class="gd-tab gh g3"></span>
+                    </div>
+                    <span class="gd-act">
+                      <span class="gd-btn">Create group</span>
+                      <span class="gd-ring"></span>
+                      <svg class="gd-cursor" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l13.5 7.7-6.2 1.5L9.2 19z" fill="rgb(var(--ink))" stroke="rgb(var(--surface))" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                    </span>
                   </div>
                   <span class="leaf-cap">Gather</span>
                 </div>
