@@ -265,6 +265,24 @@
   }
   .hero h1 .turn { color: rgb(var(--accent)); font-style: italic; font-weight: 500; }
 
+  /* ambient ground: warm light drifting across paper grain */
+  .hero > .wrap { position: relative; z-index: 1; }
+  .hero-bg { position: absolute; inset: 0; pointer-events: none; }
+  .hero-bg .glow { position: absolute; width: 58vw; min-width: 420px; aspect-ratio: 1; border-radius: 50%; }
+  .hero-bg .g1 {
+    left: -14%; top: -32%;
+    background: radial-gradient(circle, rgb(var(--accent) / .11), transparent 64%);
+    animation: drift-a 26s ease-in-out infinite alternate;
+  }
+  .hero-bg .g2 {
+    right: -20%; bottom: -44%;
+    background: radial-gradient(circle, rgb(var(--accent) / .08), transparent 60%);
+    animation: drift-b 34s ease-in-out infinite alternate;
+  }
+  @keyframes drift-a { to { transform: translate(9vw, 7vh) scale(1.18); } }
+  @keyframes drift-b { to { transform: translate(-8vw, -6vh) scale(1.12); } }
+  .hero-bg .grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .05; }
+
   /* load choreography: lines rise out of a masked slot, then the rest follows */
   @keyframes rise-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
   .rise { opacity: 0; animation: rise-up .85s var(--ease-quint) var(--d, 0s) forwards; }
@@ -340,9 +358,19 @@
   .gather-demo { --cycle: 7.5s; display: grid; gap: 11px; justify-items: start; }
   .gd-pill { opacity: 0; transform: translateY(5px) scale(.92); animation: gd-pill-in var(--cycle) infinite; }
   .gd-strip { display: flex; gap: 4%; width: 100%; }
-  .gd-tab { width: 22%; flex: none; height: 9px; border-radius: 4.5px; }
-  .gd-tab.plain { background: rgb(var(--border-strong)); animation: gd-shift-right var(--cycle) infinite; }
-  .gd-tab.gh { background: rgb(var(--accent) / .38); }
+  .gd-tab {
+    width: 22%; flex: none; height: 17px; border-radius: 6px;
+    display: flex; align-items: center; gap: 4px; padding: 0 6px;
+  }
+  .gd-tab::before { content: ""; width: 6px; height: 6px; border-radius: 2px; flex: none; }
+  .gd-tab::after { content: ""; flex: 1; height: 3.5px; border-radius: 2px; background: rgb(var(--ink) / .18); }
+  .gd-tab.plain {
+    background: rgb(var(--surface-subtle)); border: 1px solid rgb(var(--border));
+    animation: gd-shift-right var(--cycle) infinite;
+  }
+  .gd-tab.plain::before { background: rgb(var(--ink-faint)); }
+  .gd-tab.gh { background: rgb(var(--accent) / .14); border: 1px solid rgb(var(--accent) / .35); }
+  .gd-tab.gh::before { background: rgb(var(--accent) / .9); }
   .gd-tab.g1 { animation: gd-tint var(--cycle) infinite; }
   .gd-tab.g2, .gd-tab.g3 { animation: gd-shift-left var(--cycle) infinite; }
   .gd-act { position: relative; display: inline-flex; }
@@ -395,15 +423,96 @@
     94%, 100% { transform: none; }
   }
   @keyframes gd-tint {
-    0%, 48% { background: rgb(var(--accent) / .38); }
-    58%, 84% { background: rgb(var(--accent) / .62); }
-    94%, 100% { background: rgb(var(--accent) / .38); }
+    0%, 48% { background: rgb(var(--accent) / .14); }
+    58%, 84% { background: rgb(var(--accent) / .34); }
+    94%, 100% { background: rgb(var(--accent) / .14); }
   }
   @keyframes gd-pill-in {
     0%, 48% { opacity: 0; transform: translateY(5px) scale(.92); }
     58%, 84% { opacity: 1; transform: none; }
     93%, 100% { opacity: 0; transform: translateY(5px) scale(.92); }
   }
+
+  /* the return diorama: the bell fires, the tab comes back */
+  .ret-demo { --cycle: 7.4s; }
+  .ret-bell-wrap { position: relative; display: inline-block; margin-bottom: 8px; }
+  .ret-bell-wrap .v-bell { margin: 0; transform-origin: 50% 8%; animation: ret-swing var(--cycle) infinite; }
+  .ret-dot {
+    position: absolute; top: -2px; right: -4px; width: 8px; height: 8px;
+    border-radius: 50%; background: rgb(var(--accent));
+    box-shadow: 0 0 0 2px rgb(var(--surface-muted));
+    transform: scale(0); animation: ret-dot var(--cycle) infinite;
+  }
+  .ret-stack { display: grid; }
+  .ret-stack > * { grid-area: 1 / 1; }
+  .ret-a { animation: ret-a var(--cycle) infinite; }
+  .ret-b { opacity: 0; animation: ret-b var(--cycle) infinite; }
+  @keyframes ret-swing {
+    0%, 38% { transform: rotate(0); }
+    42% { transform: rotate(13deg); }
+    46% { transform: rotate(-11deg); }
+    50% { transform: rotate(7deg); }
+    54% { transform: rotate(-4deg); }
+    58%, 100% { transform: rotate(0); }
+  }
+  @keyframes ret-dot {
+    0%, 41% { transform: scale(0); }
+    47% { transform: scale(1.3); }
+    51%, 86% { transform: scale(1); }
+    93%, 100% { transform: scale(0); }
+  }
+  @keyframes ret-a {
+    0%, 44% { opacity: 1; transform: none; }
+    52%, 90% { opacity: 0; transform: translateY(-4px); }
+    97%, 100% { opacity: 1; transform: none; }
+  }
+  @keyframes ret-b {
+    0%, 50% { opacity: 0; transform: translateY(5px); }
+    58%, 86% { opacity: 1; transform: none; }
+    94%, 100% { opacity: 0; transform: translateY(5px); }
+  }
+
+  /* the recall diorama: margin notes turn over, the marker draws through */
+  .rec-demo { --cycle: 8.8s; display: grid; }
+  .rec-demo > * { grid-area: 1 / 1; }
+  .rec-demo .v-note b {
+    background-image: linear-gradient(rgb(var(--accent) / .22), rgb(var(--accent) / .22));
+    background-repeat: no-repeat; background-size: 0% 48%; background-position: 0 82%;
+  }
+  .rec-a { animation: rec-a var(--cycle) infinite; }
+  .rec-a b { animation: rec-hl-a var(--cycle) infinite; }
+  .rec-b { opacity: 0; animation: rec-b var(--cycle) infinite; }
+  .rec-b b { animation: rec-hl-b var(--cycle) infinite; }
+  @keyframes rec-a {
+    0%, 40% { opacity: 1; transform: none; }
+    47%, 92% { opacity: 0; transform: translateY(-4px); }
+    98%, 100% { opacity: 1; transform: none; }
+  }
+  @keyframes rec-b {
+    0%, 49% { opacity: 0; transform: translateY(5px); }
+    56%, 88% { opacity: 1; transform: none; }
+    95%, 100% { opacity: 0; transform: translateY(5px); }
+  }
+  @keyframes rec-hl-a {
+    0%, 6% { background-size: 0% 48%; }
+    20%, 100% { background-size: 100% 48%; }
+  }
+  @keyframes rec-hl-b {
+    0%, 58% { background-size: 0% 48%; }
+    72%, 100% { background-size: 100% 48%; }
+  }
+
+  /* the find leaf: a result lands as the query completes */
+  .kbd-result {
+    display: inline-flex; align-items: center; gap: 7px; justify-self: start;
+    font-size: .72rem; font-weight: 600; color: rgb(var(--accent-ink));
+    background: rgb(20 14 10 / .18); padding: 6px 10px; border-radius: 8px;
+    opacity: 0; transform: translateY(5px);
+    transition: opacity .35s var(--ease), transform .35s var(--ease-quint);
+  }
+  .kbd-result.show { opacity: 1; transform: none; }
+  .kr-dot { width: 7px; height: 7px; border-radius: 2px; background: rgb(var(--accent-ink) / .85); flex: none; }
+  .kr-go { opacity: .7; }
   .v-bell { color: rgb(var(--ink-muted)); }
   .v-time { font-size: .9rem; font-weight: 600; color: rgb(var(--ink)); }
   .v-time small { display: block; font-weight: 500; font-size: .74rem; color: rgb(var(--ink-faint)); margin-top: 2px; }
@@ -776,12 +885,14 @@
     .in-view .fired, .in-view .ts-pill { transition: none !important; }
     .rise, .hero h1 .line-inner, .fold .leaf, .fold-caption { animation: none !important; opacity: 1; transform: none; }
     .v-kbd .caret { display: none; }
-    .gather-demo * { animation: none !important; }
+    .gather-demo *, .ret-demo *, .rec-demo *, .hero-bg .glow { animation: none !important; }
     .gd-cursor, .gd-ring { display: none; }
     .gd-pill { opacity: 1; transform: none; }
     .gd-tab.plain { transform: translateX(236%); }
     .gd-tab.g2, .gd-tab.g3 { transform: translateX(-118%); }
-    .gd-tab.gh { background: rgb(var(--accent) / .55); }
+    .gd-tab.gh { background: rgb(var(--accent) / .3); }
+    .ret-dot { display: none; }
+    .kbd-result { display: none; }
   }
 
   /* ---------- responsive ---------- */
@@ -845,6 +956,11 @@
   <main id="main">
     <!-- ============================================== the cover ===== -->
     <section class="hero" aria-label="Introduction">
+      <div class="hero-bg" aria-hidden="true">
+        <i class="glow g1"></i>
+        <i class="glow g2"></i>
+        <svg class="grain" width="100%" height="100%"><filter id="hero-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#hero-grain)"/></svg>
+      </div>
       <div class="wrap">
         <div class="hero-grid">
           <div class="hero-copy">
@@ -870,7 +986,7 @@
 
           <div class="fold-scene">
             <div>
-              <div class="fold" id="fold" role="img" aria-label="Four paper leaves. In the first, a cursor clicks Create group and three scattered tabs slide together under a github pill. The others show a reminder time, a margin note, and a command-K shortcut.">
+              <div class="fold" id="fold" role="img" aria-label="Four animated paper leaves. A cursor clicks Create group and three scattered tabs slide together under a github pill. A reminder bell rings and the closed tab reopens. A margin note gets a marker highlight and turns over to the next note. A command-K palette types queries and lands the matching tab.">
                 <div class="leaf">
                   <div class="gather-demo">
                     <span class="v-group gd-pill"><i></i>github · 3</span>
@@ -889,19 +1005,28 @@
                   <span class="leaf-cap">Gather</span>
                 </div>
                 <div class="leaf">
-                  <div class="v-time">
-                    <svg class="v-bell" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:8px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                    Fires at 4:30 PM
-                    <small>even if the tab is closed</small>
+                  <div class="ret-demo">
+                    <span class="ret-bell-wrap">
+                      <svg class="v-bell" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                      <span class="ret-dot"></span>
+                    </span>
+                    <div class="ret-stack">
+                      <div class="v-time ret-a">Fires at 4:30 PM<small>even if the tab is closed</small></div>
+                      <div class="v-time ret-b">Fired. Tab reopened<small>right where you left it</small></div>
+                    </div>
                   </div>
                   <span class="leaf-cap">Return</span>
                 </div>
                 <div class="leaf">
-                  <p class="v-note" style="margin:0"><b>Stopped at</b> the threshold math. Resume from §4.</p>
+                  <div class="rec-demo">
+                    <p class="v-note rec-a" style="margin:0"><b>Stopped at</b> the threshold math. Resume from §4.</p>
+                    <p class="v-note rec-b" style="margin:0"><b>Why open?</b> Compare the pricing tiers before Friday.</p>
+                  </div>
                   <span class="leaf-cap">Recall</span>
                 </div>
                 <div class="leaf leaf-clay">
                   <div class="v-kbd">⌘K <span class="type-wrap"><span id="kbd-type">find anything</span><i class="caret" aria-hidden="true"></i></span></div>
+                  <div class="kbd-result" id="kbd-result"><span class="kr-dot"></span><span id="kbd-result-text">Figma · Q3 brief</span><span class="kr-go">↗</span></div>
                   <span class="leaf-cap">Find</span>
                 </div>
               </div>
@@ -1386,18 +1511,32 @@
       demos.forEach(function (el) { el.classList.add("in-view"); });
     }
 
-    /* ---- the clay leaf types what it would find ---- */
+    /* ---- the clay leaf types, and the match lands ---- */
     var typeEl = document.getElementById("kbd-type");
+    var resEl = document.getElementById("kbd-result");
+    var resText = document.getElementById("kbd-result-text");
     if (typeEl && !reduce) {
-      var phrases = ["find anything", "figma brief", "pr #42 review", "alarm edge case", "that one tab"];
-      var pi = 0, ci = phrases[0].length, deleting = true;
+      var phrases = [
+        { q: "find anything", r: "Across 47 open tabs" },
+        { q: "figma brief", r: "Figma · Q3 brief" },
+        { q: "pr #42 review", r: "GitHub · PR #42" },
+        { q: "alarm edge case", r: "Note · alarm edge case" },
+        { q: "that one tab", r: "Found it. Window 2" }
+      ];
+      var pi = 0, ci = phrases[0].q.length, deleting = true;
       function tick() {
-        var p = phrases[pi];
+        var p = phrases[pi].q;
         ci += deleting ? -1 : 1;
         typeEl.textContent = p.slice(0, ci);
+        if (deleting && ci === p.length - 1) resEl.classList.remove("show");
         var wait = deleting ? 42 : 92;
-        if (!deleting && ci === p.length) { wait = 2300; deleting = true; }
-        else if (deleting && ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; wait = 420; }
+        if (!deleting && ci === p.length) {
+          resText.textContent = phrases[pi].r;
+          resEl.classList.add("show");
+          wait = 2300; deleting = true;
+        } else if (deleting && ci === 0) {
+          deleting = false; pi = (pi + 1) % phrases.length; wait = 420;
+        }
         setTimeout(tick, wait);
       }
       setTimeout(tick, 2600); /* let the unfold finish first */
