@@ -127,12 +127,13 @@ outline-offset: 2px` so it survives any background.
 
 ## Logo / mark
 
-The mark is a stacked-tabs glyph: two slightly offset rounded-rect "tabs"
-forming a T shape, with a hairline base bar suggesting a work surface. Drawn
-on a 32×32 grid, 1.5px effective stroke at 32px.
+The mark is the quarto fold: a 2×2 grid of rounded leaves (one sheet folded
+twice), three in ink-faint paper and the fourth in solid clay, set a hair
+proud like a turned page, over a hairline work-surface bar. Drawn on a
+32×32 grid so geometry pixel-snaps at 16, 24, 32 px.
 
-Wordmark: "Quarto" in the base sans, weight 600, tracking -0.012em. The dot
-on the "i" is replaced with the clay accent disc at small sizes.
+Wordmark: "quarto" lowercase in the base sans, weight 600, tracking
+-0.012em, finished with a clay accent disc as a full stop.
 
 Both available as a single React component (`<Logo />`) with `size` and
 `variant` props (`mark` | `wordmark` | `lockup`).

@@ -2,715 +2,682 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- Resolve the saved theme before first paint to avoid a flash. No stored
-       choice means the prefers-color-scheme media query governs. -->
-  <script>(function(){try{var t=localStorage.getItem("quarto-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Quarto — Smart, private tab grouping, reminders, and notes</title>
+  <script>(function(){try{var t=localStorage.getItem("quarto-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
+  <title>Quarto · Tabs you can think with</title>
   <meta name="description" content="Your tabs, neatly bound. Smart tab grouping, reminders, and per-URL notes that run fully on-device. No remote APIs, no telemetry, no sync." />
   <meta name="theme-color" content="#fcfbf8" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#201d19" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#211e1a" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Quarto — Smart, private tab grouping" />
-  <meta property="og:description" content="Smart, private tab grouping, reminders, and notes. Fully on-device." />
+  <meta property="og:title" content="Quarto · Tabs you can think with" />
+  <meta property="og:description" content="Your tabs, neatly bound. Smart, private tab grouping, reminders, and notes. Fully on-device." />
 
-  <!--
-    Quarto landing page.
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="6" y="5" width="9" height="9" rx="2" fill="%23978f87"/><rect x="17" y="5" width="9" height="9" rx="2" fill="%23978f87"/><rect x="6" y="16" width="9" height="9" rx="2" fill="%23978f87"/><rect x="17" y="16" width="10" height="10" rx="2.5" fill="%23c16338"/></svg>' />
 
-    Single self-contained file. No build step, no external requests, no remote
-    fonts — fitting for a product whose whole point is that nothing leaves your
-    machine. The palette is lifted verbatim from the extension's own
-    src/styles/tokens.css (OKLCH source, written as R G B channels so alpha
-    compositing stays trivial). Motion is transform/opacity only and fully
-    honors prefers-reduced-motion.
-  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet" />
+
   <style>
-  /* ============================================================== TOKENS */
-  :root,
-  html[data-theme="light"] {
-    /* surfaces — warm paper (hue ~60, very low chroma) */
-    --surface:        252 251 248;
-    --surface-muted:  245 244 240;
-    --surface-subtle: 236 234 229;
+  /* ================================================================
+     Quarto · landing
+     A fine-press book about your browser. Warm paper, ink, one clay
+     accent. Display set in Literata (a book face); UI in the system
+     sans, same as the product. Sections read as parts of a bound
+     volume: cover, four leaves, endpaper, colophon.
+     ================================================================ */
 
-    /* ink — warm graphite */
+  :root {
+    /* light: warm paper */
+    --surface:        252 251 248;
+    --surface-muted:  246 244 239;
+    --surface-subtle: 240 237 230;
     --ink:        37 32 27;
     --ink-muted:  108 102 94;
     --ink-faint:  151 144 135;
-
-    /* the only accent — clay */
-    --accent:        193 99 56;
+    --accent:        193 99 56;     /* clay */
+    --accent-deep:   154 74 40;
     --accent-soft:   245 226 215;
-    --accent-ink:    255 255 252;
+    --accent-ink:    255 253 250;
+    --border:        229 225 217;
+    --border-strong: 209 204 195;
+    /* the dark product panel, as shipped in the extension */
+    --panel:      42 38 33;
+    --panel-edge: 60 55 48;
+    --panel-ink:  244 241 236;
+    --panel-mut:  178 170 160;
+    --panel-fnt:  128 121 112;
+    --panel-clay: 215 153 105;
+    /* the endpaper: deep umber, the inside cover of the book */
+    --end:        52 36 28;
+    --end-soft:   66 47 37;
+    --end-ink:    246 238 230;
+    --end-mut:    202 184 170;
+    --end-clay:   224 158 110;
 
-    /* structure */
-    --border:        227 224 218;
-    --border-strong: 207 202 193;
-
-    /* state — same warm families */
-    --danger:        217 89 73;   --danger-soft:  249 224 219;
-    --success:       115 168 124; --success-soft: 227 240 226;
-    --warning:       204 168 71;  --warning-soft: 244 234 207;
-    --info:          110 142 175; --info-soft:    224 232 240;
-
-    --shadow-warm: 30 22 14;
-    color-scheme: light;
+    --serif: 'Literata', Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
   }
-
-  /* Dark via system preference, only when the user hasn't chosen explicitly */
   @media (prefers-color-scheme: dark) {
-    html:not([data-theme]) {
-      --surface:        32 29 25;
-      --surface-muted:  42 38 33;
-      --surface-subtle: 56 51 45;
-      --ink:        247 245 241;
-      --ink-muted:  188 181 171;
-      --ink-faint:  135 128 118;
+    :root:not([data-theme]) {
+      --surface:        33 30 26;
+      --surface-muted:  40 36 31;
+      --surface-subtle: 48 44 38;
+      --ink:        243 240 235;
+      --ink-muted:  185 178 168;
+      --ink-faint:  134 127 118;
       --accent:        215 153 105;
-      --accent-soft:   78 53 41;
-      --accent-ink:    25 22 18;
-      --border:        69 63 57;
-      --border-strong: 92 84 76;
-      --danger:        224 117 102; --danger-soft:  78 39 34;
-      --success:       145 190 152; --success-soft: 43 64 51;
-      --warning:       227 191 95;  --warning-soft: 74 60 31;
-      --info:          141 172 204; --info-soft:    38 52 67;
-      --shadow-warm: 0 0 0;
-      color-scheme: dark;
+      --accent-deep:   228 172 128;
+      --accent-soft:   72 50 38;
+      --accent-ink:    30 24 19;
+      --border:        56 51 45;
+      --border-strong: 76 70 62;
+      --panel:      45 41 36;
+      --panel-edge: 64 58 51;
+      --end:        24 19 16;
+      --end-soft:   38 30 25;
     }
   }
-
-  /* Forced dark override (header toggle) */
-  html[data-theme="dark"] {
-    --surface:        32 29 25;
-    --surface-muted:  42 38 33;
-    --surface-subtle: 56 51 45;
-    --ink:        247 245 241;
-    --ink-muted:  188 181 171;
-    --ink-faint:  135 128 118;
+  [data-theme="dark"] {
+    --surface:        33 30 26;
+    --surface-muted:  40 36 31;
+    --surface-subtle: 48 44 38;
+    --ink:        243 240 235;
+    --ink-muted:  185 178 168;
+    --ink-faint:  134 127 118;
     --accent:        215 153 105;
-    --accent-soft:   78 53 41;
-    --accent-ink:    25 22 18;
-    --border:        69 63 57;
-    --border-strong: 92 84 76;
-    --danger:        224 117 102; --danger-soft:  78 39 34;
-    --success:       145 190 152; --success-soft: 43 64 51;
-    --warning:       227 191 95;  --warning-soft: 74 60 31;
-    --info:          141 172 204; --info-soft:    38 52 67;
-    --shadow-warm: 0 0 0;
-    color-scheme: dark;
+    --accent-deep:   228 172 128;
+    --accent-soft:   72 50 38;
+    --accent-ink:    30 24 19;
+    --border:        56 51 45;
+    --border-strong: 76 70 62;
+    --panel:      45 41 36;
+    --panel-edge: 64 58 51;
+    --end:        24 19 16;
+    --end-soft:   38 30 25;
   }
 
-  /* ============================================================== RESET */
+  /* ---------- base ---------- */
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   body {
     margin: 0;
     background: rgb(var(--surface));
     color: rgb(var(--ink));
-    font-family: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont,
-      "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-feature-settings: "cv11" on, "ss01" on, "ss03" on, "tnum" 1, "calt" 1;
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    line-height: 1.5;
-    overflow-x: hidden;
+    transition: background-color .25s var(--ease), color .25s var(--ease);
   }
-  h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
-  ul { list-style: none; padding: 0; }
-  a { color: inherit; text-decoration: none; }
-  button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; -webkit-appearance: none; appearance: none; }
   img, svg { display: block; max-width: 100%; }
-  ::selection { background: rgb(var(--accent-soft)); color: rgb(var(--ink)); }
+  a { color: inherit; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1140px; margin-inline: auto; padding-inline: clamp(20px, 4.5vw, 48px); }
 
-  /* tabular numerals everywhere a count appears */
-  .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+  ::selection { background: rgb(var(--accent) / .22); }
 
-  /* Focus ring drawn outside the box so it survives any background */
-  :focus-visible {
-    outline: 2px solid rgb(var(--accent));
-    outline-offset: 2px;
-    border-radius: 4px;
+  .skip {
+    position: absolute; left: 16px; top: -48px; z-index: 100;
+    background: rgb(var(--ink)); color: rgb(var(--surface));
+    padding: 10px 16px; border-radius: 8px; font-size: .85rem; font-weight: 600;
+    text-decoration: none; transition: top .2s var(--ease);
   }
-  a:focus-visible, button:focus-visible, .btn:focus-visible, summary:focus-visible {
-    border-radius: 10px;
+  .skip:focus-visible { top: 16px; }
+
+  :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 2px; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3 { font-family: var(--serif); font-weight: 540; letter-spacing: -0.015em; margin: 0; }
+  h1 {
+    font-size: clamp(2.7rem, 6vw, 4.7rem);
+    line-height: 1.05;
+    font-variation-settings: 'opsz' 72;
+  }
+  h2 {
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+    line-height: 1.12;
+    font-variation-settings: 'opsz' 40;
+    text-wrap: balance;
+  }
+  h3 { font-size: clamp(1.35rem, 2vw, 1.7rem); line-height: 1.2; font-variation-settings: 'opsz' 24; }
+  .lede {
+    font-size: clamp(1.02rem, 1.4vw, 1.15rem);
+    color: rgb(var(--ink-muted));
+    line-height: 1.65;
+    max-width: 58ch;
+    margin: 0;
   }
 
-  .skip-link {
-    position: fixed; top: 10px; left: 10px; z-index: 200;
-    background: rgb(var(--accent)); color: rgb(var(--accent-ink));
-    padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
-    transform: translateY(-150%); transition: transform .2s cubic-bezier(.2,.8,.2,1);
+  /* the folio line: the book's running header, used once per part */
+  .folio {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: .95rem;
+    color: rgb(var(--accent));
+    letter-spacing: .01em;
+    display: flex; align-items: center; gap: 12px;
   }
-  .skip-link:focus { transform: translateY(0); }
+  .folio::after { content: ""; height: 1px; width: 44px; background: rgb(var(--accent) / .4); }
 
-  /* ============================================================== LAYOUT */
-  .wrap { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: clamp(20px, 5vw, 40px); }
-  .section { padding-block: clamp(72px, 11vw, 132px); position: relative; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
-    color: rgb(var(--ink-faint));
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: .92rem; font-weight: 600; text-decoration: none;
+    border-radius: 10px; padding: 13px 22px;
+    transition: transform .18s var(--ease), background-color .18s var(--ease),
+                border-color .18s var(--ease), box-shadow .18s var(--ease), color .18s var(--ease);
+    will-change: transform;
   }
-  .eyebrow::before {
-    content: ""; width: 18px; height: 1px; background: rgb(var(--border-strong));
+  .btn:active { transform: translateY(1px) scale(.99); }
+  .btn-primary {
+    background: rgb(var(--accent));
+    color: rgb(var(--accent-ink));
+    box-shadow: 0 1px 2px rgb(var(--ink) / .14), inset 0 1px 0 rgb(255 255 255 / .14);
   }
-  .lede { color: rgb(var(--ink-muted)); font-size: clamp(1rem, 1.05vw + 0.85rem, 1.18rem); line-height: 1.55; max-width: 56ch; }
+  .btn-primary:hover { background: rgb(var(--accent-deep)); box-shadow: 0 4px 14px rgb(var(--accent) / .32), inset 0 1px 0 rgb(255 255 255 / .14); }
+  .btn-ghost {
+    color: rgb(var(--ink));
+    border: 1px solid rgb(var(--border-strong));
+    background: transparent;
+  }
+  .btn-ghost:hover { background: rgb(var(--surface-muted)); border-color: rgb(var(--ink-faint)); }
+  .chrome-glyph { width: 17px; height: 17px; flex: none; }
 
-  h2.title {
-    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
-    font-weight: 600; letter-spacing: -0.012em; line-height: 1.08;
-    margin-top: 18px; margin-bottom: 16px; max-width: 20ch;
-  }
-  .section-head { max-width: 640px; }
-
-  /* ============================================================== HEADER */
+  /* ---------- header ---------- */
   header.site {
-    position: sticky; top: 0; z-index: 100;
-    transition: background-color .25s cubic-bezier(.2,.8,.2,1),
-                border-color .25s cubic-bezier(.2,.8,.2,1),
-                backdrop-filter .25s;
+    position: sticky; top: 0; z-index: 50;
+    background: rgb(var(--surface) / .92);
+    backdrop-filter: saturate(1.1) blur(8px);
     border-bottom: 1px solid transparent;
+    transition: border-color .25s var(--ease), background-color .25s var(--ease);
   }
-  header.site.scrolled {
-    background: rgb(var(--surface) / 0.72);
-    -webkit-backdrop-filter: saturate(1.4) blur(14px);
-    backdrop-filter: saturate(1.4) blur(14px);
-    border-bottom-color: rgb(var(--border));
-  }
-  .nav {
-    display: flex; align-items: center; gap: 18px;
-    height: 60px;
-  }
-  .brand { display: inline-flex; align-items: center; gap: 9px; margin-right: auto; }
-  .brand:hover .mark-front { transform: translateY(-1px); }
-  .mark-front { transition: transform .18s cubic-bezier(.2,.8,.2,1); }
+  header.site.scrolled { border-bottom-color: rgb(var(--border)); }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand:hover .mark-front { transform: translate(1px, 1px); }
+  .mark-front { transition: transform .22s var(--ease); }
   .wordmark {
-    font-weight: 600; letter-spacing: -0.012em; font-size: 1.06rem;
+    font-weight: 600; letter-spacing: -0.012em; font-size: 1.07rem;
     display: inline-flex; align-items: baseline;
   }
-  .wordmark .dot {
-    position: relative; display: inline-block; width: 8px; height: 0.6em;
-  }
+  .wordmark .dot { position: relative; display: inline-block; width: 8px; height: .6em; }
   .wordmark .dot::after {
-    content: ""; position: absolute; left: 3px; bottom: 0.02em;
+    content: ""; position: absolute; left: 3px; bottom: .02em;
     width: 5px; height: 5px; border-radius: 50%; background: rgb(var(--accent));
   }
-  nav.links { display: flex; align-items: center; gap: 4px; }
+  nav.links { display: flex; align-items: center; gap: 2px; }
   nav.links a {
-    font-size: 0.86rem; font-weight: 500; color: rgb(var(--ink-muted));
-    padding: 7px 11px; border-radius: 9px;
-    transition: color .16s, background-color .16s;
+    font-size: .88rem; font-weight: 500; color: rgb(var(--ink-muted));
+    text-decoration: none; padding: 8px 12px; border-radius: 8px;
+    transition: color .16s var(--ease), background-color .16s var(--ease);
   }
-  nav.links a:hover { color: rgb(var(--ink)); background: rgb(var(--surface-subtle)); }
-
-  /* On narrow screens the section links collapse; brand, theme, and the
-     primary CTA stay. Every nav target is still reachable by scrolling. */
-  @media (max-width: 680px) {
-    nav.links { display: none; }
-    .nav { gap: 12px; }
+  nav.links a:hover { color: rgb(var(--ink)); background: rgb(var(--surface-muted)); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .theme-btn {
+    width: 38px; height: 38px; border-radius: 9px; border: 1px solid rgb(var(--border));
+    background: transparent; color: rgb(var(--ink-muted)); cursor: pointer;
+    display: grid; place-items: center;
+    transition: color .16s var(--ease), border-color .16s var(--ease), background-color .16s var(--ease);
   }
-  @media (max-width: 380px) {
-    .header-cta-label { display: none; }
-    .btn.btn-primary.btn-sm { padding: 9px 11px; }
-  }
-
-  .icon-btn {
-    display: inline-grid; place-items: center; width: 36px; height: 36px;
-    border-radius: 9px; border: 1px solid rgb(var(--border));
-    background: rgb(var(--surface-muted)); color: rgb(var(--ink-muted));
-    transition: color .16s, background-color .16s, border-color .16s, transform .16s;
-  }
-  .icon-btn:hover { color: rgb(var(--ink)); background: rgb(var(--surface-subtle)); transform: translateY(-1px); }
-  .icon-btn .sun { display: none; } .icon-btn .moon { display: block; }
-  html[data-theme="dark"] .icon-btn .sun { display: block; }
-  html[data-theme="dark"] .icon-btn .moon { display: none; }
+  .theme-btn:hover { color: rgb(var(--ink)); background: rgb(var(--surface-muted)); }
+  .theme-btn .sun { display: none; }
+  [data-theme="dark"] .theme-btn .moon { display: none; }
+  [data-theme="dark"] .theme-btn .sun { display: block; }
   @media (prefers-color-scheme: dark) {
-    html:not([data-theme]) .icon-btn .sun { display: block; }
-    html:not([data-theme]) .icon-btn .moon { display: none; }
+    :root:not([data-theme]) .theme-btn .moon { display: none; }
+    :root:not([data-theme]) .theme-btn .sun { display: block; }
+  }
+  .header-cta { padding: 9px 16px; font-size: .86rem; border-radius: 9px; }
+  @media (max-width: 860px) {
+    nav.links { display: none; }
+    .header-cta-label { display: none; }
+    .header-cta { padding: 9px 11px; }
   }
 
-  /* ============================================================== BUTTONS */
-  .btn {
-    --lift: 0;
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 0.92rem; font-weight: 550; line-height: 1;
-    padding: 12px 18px; border-radius: 11px; border: 1px solid transparent;
-    transition: transform .16s cubic-bezier(.2,.8,.2,1), background-color .16s,
-                box-shadow .16s, border-color .16s, color .16s;
-    transform: translateY(var(--lift)); white-space: nowrap;
-  }
-  .btn-primary {
-    background: rgb(var(--accent)); color: rgb(var(--accent-ink));
-    box-shadow: 0 1px 2px rgb(var(--shadow-warm) / .14);
-  }
-  .btn-primary:hover {
-    --lift: -2px;
-    box-shadow: 0 10px 26px -10px rgb(var(--accent) / .65),
-                0 0 0 4px rgb(var(--accent) / .12);
-  }
-  .btn-primary:active { --lift: 0px; }
-  .btn-ghost {
-    background: transparent; color: rgb(var(--ink)); border-color: rgb(var(--border-strong));
-  }
-  .btn-ghost:hover { --lift: -2px; background: rgb(var(--surface-muted)); border-color: rgb(var(--ink-faint)); }
-  .btn-sm { padding: 9px 14px; font-size: 0.85rem; border-radius: 10px; }
-  .chrome-glyph { width: 17px; height: 17px; }
-
-  /* ============================================================== HERO */
-  .hero { position: relative; overflow: clip; padding-top: clamp(36px, 6vw, 64px); padding-bottom: clamp(56px, 9vw, 104px); }
-  /* faint warm mesh + grain, barely there */
-  .hero-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .hero-bg::before {
-    content: ""; position: absolute; inset: -20% -10% auto -10%; height: 720px;
-    background:
-      radial-gradient(60% 60% at 18% 12%, rgb(var(--accent) / .10), transparent 70%),
-      radial-gradient(50% 55% at 88% 4%, rgb(var(--warning) / .07), transparent 70%),
-      radial-gradient(45% 60% at 60% 40%, rgb(var(--info) / .05), transparent 75%);
-    filter: blur(8px);
-  }
-  .hero-bg .grain {
-    position: absolute; inset: 0; opacity: .035; mix-blend-mode: multiply;
-  }
-  html[data-theme="dark"] .hero-bg .grain { mix-blend-mode: screen; opacity: .05; }
-  @media (prefers-color-scheme: dark) { html:not([data-theme]) .hero-bg .grain { mix-blend-mode: screen; opacity: .05; } }
-  /* spotlight follows cursor, very subtle */
-  .hero-bg .spot {
-    position: absolute; width: 480px; height: 480px; border-radius: 50%;
-    left: var(--mx, 50%); top: var(--my, 30%); transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgb(var(--accent) / .10), transparent 65%);
-    opacity: 0; transition: opacity .4s ease; pointer-events: none;
-  }
-  .hero:hover .hero-bg .spot { opacity: 1; }
-
+  /* ---------- hero: the cover ---------- */
+  .hero { position: relative; overflow: clip; }
   .hero-grid {
-    position: relative; z-index: 1;
-    display: grid; grid-template-columns: 1fr; gap: clamp(40px, 6vw, 72px);
-    align-items: center;
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: clamp(32px, 5vw, 72px); align-items: center;
+    padding-block: clamp(64px, 10vw, 132px) clamp(56px, 8vw, 110px);
   }
-  /* min-width:0 lets the 1fr tracks shrink below their content's intrinsic
-     width — without it the hero device's nowrap tab strip blows the column
-     out past the viewport and the copy gets clipped on narrow screens. */
-  .hero-grid > *, .feature > *, .privacy-grid > *, .surfaces-grid > * { min-width: 0; }
-  .hero-demo, .device { min-width: 0; max-width: 100%; }
-  @media (min-width: 940px) { .hero-grid { grid-template-columns: 1.02fr 1fr; } }
-
-  .hero-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 5px 12px 5px 8px; border-radius: 999px;
-    background: rgb(var(--surface-muted)); border: 1px solid rgb(var(--border));
-    font-size: 0.78rem; font-weight: 500; color: rgb(var(--ink-muted));
+  .hero h1 .turn { color: rgb(var(--accent)); font-style: italic; font-weight: 500; }
+  .hero .sub {
+    font-size: clamp(1.04rem, 1.5vw, 1.2rem); line-height: 1.62;
+    color: rgb(var(--ink-muted)); max-width: 50ch; margin: 26px 0 0;
   }
-  .hero-pill .tag {
-    font-size: 0.68rem; font-weight: 600; letter-spacing: .02em;
-    padding: 2px 7px; border-radius: 999px;
-    background: rgb(var(--accent-soft)); color: rgb(var(--accent));
-  }
-  .hero h1 {
-    font-size: clamp(2.5rem, 6.2vw, 4.1rem);
-    font-weight: 600; letter-spacing: -0.022em; line-height: 1.02;
-    margin: 22px 0 0; max-width: 14ch;
-  }
-  .hero h1 .accent { color: rgb(var(--accent)); }
-  .hero .subhead {
-    margin-top: 20px; font-size: clamp(1.04rem, 1vw + 0.9rem, 1.22rem);
-    color: rgb(var(--ink-muted)); line-height: 1.55; max-width: 46ch;
-  }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
   .hero-meta {
-    margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px 18px;
-    font-size: 0.82rem; color: rgb(var(--ink-faint)); align-items: center;
+    display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 30px;
+    font-size: .84rem; color: rgb(var(--ink-faint));
   }
   .hero-meta span { display: inline-flex; align-items: center; gap: 7px; }
-  .hero-meta .ok { color: rgb(var(--success)); }
+  .hero-meta .ok { color: rgb(var(--accent)); }
 
-  /* ----- hero device / animated demo ----- */
-  .device {
-    position: relative;
-    border-radius: 16px; border: 1px solid rgb(var(--border));
+  /* the fold: one sheet, folded twice, four leaves */
+  .fold-scene { perspective: 1100px; display: grid; justify-items: center; }
+  .fold-scene > div { width: 100%; max-width: 430px; min-width: 0; }
+  .fold {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    width: min(100%, 430px);
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform .35s var(--ease-quint);
+  }
+  .leaf {
+    aspect-ratio: 1 / .92;
+    min-width: 0;
+    border-radius: 16px;
     background: rgb(var(--surface-muted));
-    box-shadow: 0 1px 0 rgb(var(--surface) / .6) inset,
-                0 30px 60px -34px rgb(var(--shadow-warm) / .45),
-                0 8px 22px -18px rgb(var(--shadow-warm) / .4);
-    overflow: hidden;
+    border: 1px solid rgb(var(--border));
+    box-shadow: 0 1px 2px rgb(var(--ink) / .05), 0 12px 32px -18px rgb(var(--ink) / .25);
+    padding: clamp(14px, 2vw, 22px);
+    display: flex; flex-direction: column; justify-content: space-between;
+    transform-style: preserve-3d;
   }
-  .device-chrome {
-    display: flex; align-items: center; gap: 12px;
-    padding: 11px 14px; border-bottom: 1px solid rgb(var(--border));
-    background: rgb(var(--surface-subtle));
+  .leaf .leaf-cap {
+    font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+    color: rgb(var(--ink-faint));
   }
-  .dots { display: flex; gap: 7px; }
-  .dots i { width: 11px; height: 11px; border-radius: 50%; background: rgb(var(--border-strong)); display: block; }
-  .omnibox {
-    flex: 1; min-width: 0; height: 26px; border-radius: 7px;
-    background: rgb(var(--surface)); border: 1px solid rgb(var(--border));
-    display: flex; align-items: center; gap: 7px; padding: 0 10px;
-    font-size: 0.72rem; color: rgb(var(--ink-faint));
+  .leaf-clay {
+    background: rgb(var(--accent));
+    border-color: rgb(var(--accent-deep) / .5);
+    box-shadow: 0 1px 2px rgb(var(--ink) / .12), 0 18px 40px -16px rgb(var(--accent) / .55);
   }
-  .omnibox .lock { color: rgb(var(--success)); flex: none; }
-  .omnibox span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .leaf-clay .leaf-cap { color: rgb(var(--accent-ink) / .72); }
+  .fold-caption {
+    margin-top: 26px; font-family: var(--serif); font-style: italic;
+    font-size: .92rem; color: rgb(var(--ink-faint)); text-align: center;
+  }
 
-  /* the tab strip that performs the grouping */
-  .tabstrip {
-    display: flex; align-items: stretch; gap: 6px;
-    padding: 12px 14px 14px; position: relative;
-    background:
-      linear-gradient(rgb(var(--surface) / 0), rgb(var(--surface) / .35)),
-      repeating-linear-gradient(45deg, transparent 0 12px, rgb(var(--ink) / .012) 12px 13px);
+  /* leaf vignettes */
+  .v-group { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
+    background: rgb(var(--accent-soft)); color: rgb(var(--accent-deep));
+    font-size: .8rem; font-weight: 600; padding: 5px 11px; border-radius: 999px; }
+  .v-group i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--accent)); }
+  .v-tabs { display: flex; gap: 5px; margin-top: 10px; }
+  .v-tab { height: 8px; border-radius: 4px; background: rgb(var(--border-strong)); flex: 1; }
+  .v-bell { color: rgb(var(--ink-muted)); }
+  .v-time { font-size: .9rem; font-weight: 600; color: rgb(var(--ink)); }
+  .v-time small { display: block; font-weight: 500; font-size: .74rem; color: rgb(var(--ink-faint)); margin-top: 2px; }
+  .v-note { font-family: var(--serif); font-style: italic; font-size: .92rem; line-height: 1.45; color: rgb(var(--ink-muted)); }
+  .v-note b { color: rgb(var(--ink)); font-weight: 600; font-style: normal; }
+  .v-kbd {
+    font-size: clamp(1.5rem, 2.6vw, 2rem); font-weight: 650; letter-spacing: .01em;
+    color: rgb(var(--accent-ink));
+    display: flex; align-items: center; gap: 8px;
   }
-  .tab {
-    flex: 1 1 0; min-width: 0;
-    display: flex; align-items: center; gap: 7px;
-    padding: 8px 9px; border-radius: 9px;
-    background: rgb(var(--surface)); border: 1px solid rgb(var(--border));
-    font-size: 0.7rem; color: rgb(var(--ink-muted));
-  }
-  .tab .fav { width: 15px; height: 15px; border-radius: 4px; flex: none; display: grid; place-items: center;
-    font-size: 0.56rem; font-weight: 700; color: #fff; }
-  .tab .fav-gh { background: #24292f; }
-  .tab .ttl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .v-kbd span { font-size: .78rem; font-weight: 500; opacity: .75; letter-spacing: .02em; }
 
-  /* A real DOM container wrapping the github tabs, exactly how Chrome renders
-     a tab group: a colored label chip, then the tabs inside a colored frame.
-     Because it is a normal flex element, the frame and label can never drift
-     out of alignment — there is no JS positioning to go stale. */
-  .tab-group {
-    flex: 2.4 1 0; min-width: 0;
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px; border-radius: 12px;
-    border: 1.5px solid transparent; background: transparent;
-  }
-  .tab-group .tab { border-color: rgb(var(--border) / .7); }
-  .group-pill {
-    flex: none;
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 9px; border-radius: 8px; white-space: nowrap;
-    font-size: 0.68rem; font-weight: 600;
-    color: rgb(var(--accent)); background: rgb(var(--accent) / .14);
-  }
-  .group-pill .gdot { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--accent)); flex: none; }
-
-  /* faux page body below the strip, so the demo has depth and the
-     suggestion card has somewhere to dock */
-  .device-page { position: relative; padding: 20px; display: grid; gap: 11px; background: rgb(var(--surface)); min-height: 168px; }
-  .device-page .ph { height: 15px; width: 44%; border-radius: 6px; background: rgb(var(--surface-subtle)); }
-  .device-page .pl { height: 9px; border-radius: 5px; background: rgb(var(--surface-subtle)); }
-  .device-page .pl.w90 { width: 90%; } .device-page .pl.w80 { width: 80%; } .device-page .pl.w60 { width: 60%; }
-  .device-page .pl.w35 { width: 35%; }
-  .device-page .pl.accent { background: rgb(var(--accent) / .28); }
-
-  /* a side-panel suggestion card floating over the device */
-  .panel-pop {
-    position: absolute; right: 14px; bottom: 16px; z-index: 3; width: min(256px, 70%);
-    border-radius: 13px; border: 1px solid rgb(var(--border));
-    background: rgb(var(--surface));
-    box-shadow: 0 18px 40px -22px rgb(var(--shadow-warm) / .5);
-    padding: 13px;
-  }
-  .panel-pop .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
-  .panel-pop .badge {
-    font-size: 0.6rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
-    color: rgb(var(--accent)); background: rgb(var(--accent-soft));
-    padding: 2px 7px; border-radius: 999px;
-  }
-  .panel-pop .match { font-size: 0.64rem; color: rgb(var(--ink-faint)); }
-  .panel-pop .q { font-size: 0.78rem; color: rgb(var(--ink)); line-height: 1.4; }
-  .panel-pop .q b { font-weight: 600; }
-  .panel-pop .label-row { font-size: 0.66rem; color: rgb(var(--ink-faint)); margin-top: 8px; display: flex; align-items: center; gap: 6px; }
-  .panel-pop .label-row .chip { color: rgb(var(--ink-muted)); background: rgb(var(--surface-subtle)); padding: 1px 6px; border-radius: 6px; font-weight: 600; }
-  .panel-pop .acts { display: flex; gap: 7px; margin-top: 11px; }
-  .panel-pop .mini {
-    font-size: 0.7rem; font-weight: 550; padding: 6px 10px; border-radius: 8px; flex: 1; text-align: center;
-  }
-  .panel-pop .mini.primary { background: rgb(var(--accent)); color: rgb(var(--accent-ink)); }
-  .panel-pop .mini.ghost { background: transparent; color: rgb(var(--ink-muted)); border: 1px solid rgb(var(--border)); }
-
-  /* ---------- the loop: github tabs settle into a forming group ---------- */
-  @keyframes group-form {
-    0%, 12%   { border-color: transparent; background-color: transparent; }
-    28%, 80%  { border-color: rgb(var(--accent) / .45); background-color: rgb(var(--accent) / .06); }
-    94%, 100% { border-color: transparent; background-color: transparent; }
-  }
-  @keyframes pill-in {
-    0%, 14%   { opacity: 0; transform: translateX(-5px); }
-    30%, 80%  { opacity: 1; transform: translateX(0); }
-    92%, 100% { opacity: 0; transform: translateX(-5px); }
-  }
-  @keyframes ghtab-in {
-    0%, 12%   { opacity: .55; transform: translateY(5px) scale(.985); }
-    28%, 80%  { opacity: 1; transform: none; }
-    94%, 100% { opacity: .55; transform: translateY(5px) scale(.985); }
-  }
-  @keyframes pop-in {
-    0%, 40%   { opacity: 0; transform: translateY(8px) scale(.98); }
-    52%, 86%  { opacity: 1; transform: translateY(0) scale(1); }
-    96%, 100% { opacity: 0; transform: translateY(8px) scale(.98); }
-  }
-  .anim .tab-group { animation: group-form 8.5s cubic-bezier(.2,.8,.2,1) infinite; }
-  .anim .group-pill { animation: pill-in 8.5s cubic-bezier(.2,.8,.2,1) infinite; }
-  .anim .tab-group .tab.gh { animation: ghtab-in 8.5s cubic-bezier(.2,.8,.2,1) infinite; }
-  .anim .panel-pop { animation: pop-in 8.5s cubic-bezier(.2,.8,.2,1) infinite; }
-
-  /* ============================================================== TRUST STRIP */
-  .trust {
-    border-top: 1px solid rgb(var(--border)); border-bottom: 1px solid rgb(var(--border));
-    background: rgb(var(--surface-muted));
-  }
+  /* ---------- trust strip ---------- */
+  .trust { border-block: 1px solid rgb(var(--border)); }
   .trust .row {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-    gap: 14px 30px; padding: 20px 0; text-align: center;
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 10px 0; padding-block: 18px;
+    font-size: .85rem; color: rgb(var(--ink-muted)); font-weight: 500;
   }
-  .trust .item { display: inline-flex; align-items: center; gap: 9px; font-size: 0.86rem; color: rgb(var(--ink-muted)); font-weight: 500; }
+  .trust .item { display: inline-flex; align-items: center; gap: 8px; padding-inline: 22px; }
   .trust .item svg { color: rgb(var(--ink-faint)); flex: none; }
-  .trust .sep { width: 1px; height: 16px; background: rgb(var(--border-strong)); }
-  @media (max-width: 620px) { .trust .sep { display: none; } }
+  .trust .sep { width: 1px; height: 16px; background: rgb(var(--border)); }
+  @media (max-width: 700px) { .trust .sep { display: none; } .trust .item { padding-inline: 12px; } }
 
-  /* ============================================================== FEATURES */
-  .feature {
-    display: grid; grid-template-columns: 1fr; gap: clamp(32px, 5vw, 64px);
-    align-items: center;
-  }
-  .feature + .feature { margin-top: clamp(72px, 10vw, 120px); }
-  @media (min-width: 880px) {
-    .feature { grid-template-columns: 1fr 1fr; }
-    .feature.flip .copy { order: 2; }
-    .feature.flip .mock { order: 1; }
-  }
-  .feature .num {
-    font-size: 0.78rem; font-weight: 600; color: rgb(var(--accent));
-    letter-spacing: .02em; font-variant-numeric: tabular-nums;
-  }
-  .feature h3 {
-    font-size: clamp(1.4rem, 2.4vw, 1.85rem); font-weight: 600;
-    letter-spacing: -0.012em; line-height: 1.12; margin: 14px 0 14px;
-    max-width: 16ch;
-  }
-  .feature .body { color: rgb(var(--ink-muted)); font-size: 1.02rem; line-height: 1.58; max-width: 42ch; }
-  .feature .notes { margin-top: 18px; display: grid; gap: 10px; }
-  .feature .notes li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.92rem; color: rgb(var(--ink-muted)); }
-  .feature .notes svg { color: rgb(var(--accent)); flex: none; margin-top: 2px; }
+  /* ---------- chapters ---------- */
+  .part { padding-block: clamp(72px, 10vw, 136px); }
+  .part-head { max-width: 720px; display: grid; gap: 18px; }
 
-  /* generic mock panel (recreated UI) */
-  .mock {
-    border-radius: 15px; border: 1px solid rgb(var(--border));
-    background: rgb(var(--surface));
-    box-shadow: 0 1px 0 rgb(var(--surface) / .5) inset,
-                0 24px 50px -34px rgb(var(--shadow-warm) / .42);
+  .chapter {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(36px, 6vw, 88px); align-items: center;
+    padding-block: clamp(44px, 6vw, 84px);
+  }
+  .chapter + .chapter { border-top: 1px solid rgb(var(--border)); }
+  .chapter > *, .hero-grid > *, .end-grid > *, .spread > * { min-width: 0; }
+  .chapter.flip > .ch-copy { order: 2; }
+  .ch-leafno {
+    font-family: var(--serif); font-style: italic;
+    font-size: 1rem; color: rgb(var(--accent));
+  }
+  .ch-copy h3 { margin-top: 10px; }
+  .ch-copy .body { color: rgb(var(--ink-muted)); margin: 14px 0 0; max-width: 52ch; }
+  .ch-notes { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 11px; }
+  .ch-notes li {
+    position: relative; padding-left: 18px;
+    font-size: .92rem; color: rgb(var(--ink-muted));
+  }
+  .ch-notes li::before {
+    content: ""; position: absolute; left: 0; top: .5em;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgb(var(--accent));
+  }
+  .ch-notes b { color: rgb(var(--ink)); font-weight: 600; }
+
+  /* ---------- the dark product panel (as it really ships) ---------- */
+  .panel {
+    background: rgb(var(--panel));
+    border: 1px solid rgb(var(--panel-edge));
+    border-radius: 18px;
+    box-shadow: 0 2px 6px rgb(var(--ink) / .08), 0 28px 60px -28px rgb(var(--ink) / .45);
+    color: rgb(var(--panel-ink));
+    font-size: .86rem;
     overflow: hidden;
   }
-  .mock-head {
-    display: flex; align-items: center; gap: 9px; padding: 12px 14px;
-    border-bottom: 1px solid rgb(var(--border)); background: rgb(var(--surface-muted));
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid rgb(var(--panel-edge));
   }
-  .mock-head .ttl { font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
-  .mock-head .right { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; color: rgb(var(--ink-faint)); }
-  .mock-head .pillcount { font-size: 0.66rem; font-weight: 600; color: rgb(var(--ink-muted)); background: rgb(var(--surface-subtle)); padding: 2px 7px; border-radius: 999px; }
-  .mock-tabs { display: flex; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid rgb(var(--border)); }
-  .mock-tabs .mt { font-size: 0.72rem; color: rgb(var(--ink-faint)); padding: 6px 9px 9px; position: relative; font-weight: 500; }
-  .mock-tabs .mt.active { color: rgb(var(--ink)); }
-  .mock-tabs .mt.active::after { content: ""; position: absolute; left: 9px; right: 9px; bottom: -1px; height: 2px; background: rgb(var(--accent)); border-radius: 2px; }
-  .mock-body { padding: 14px; display: grid; gap: 11px; }
+  .panel-head .ttl { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: .9rem; }
+  .panel-head .meta { font-size: .76rem; color: rgb(var(--panel-fnt)); }
+  .panel-tabs { display: flex; gap: 2px; padding: 8px 12px 0; border-bottom: 1px solid rgb(var(--panel-edge)); }
+  .panel-tabs .pt {
+    font-size: .8rem; font-weight: 500; color: rgb(var(--panel-mut));
+    padding: 7px 11px 9px; border-bottom: 2px solid transparent;
+  }
+  .panel-tabs .pt.on { color: rgb(var(--panel-ink)); border-bottom-color: rgb(var(--panel-clay)); font-weight: 600; }
+  .panel-body { padding: 16px 18px 18px; display: grid; gap: 12px; }
 
-  /* suggestion card (feature 1) */
   .sugg {
-    border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 12px;
-    background: rgb(var(--surface)); display: grid; gap: 9px;
-    transition: border-color .16s, transform .16s, box-shadow .16s;
+    border: 1px solid rgb(var(--panel-edge)); border-radius: 12px; padding: 13px 14px;
+    display: grid; gap: 8px; background: rgb(var(--panel-edge) / .25);
   }
-  .sugg:hover { border-color: rgb(var(--border-strong)); transform: translateY(-2px); box-shadow: 0 12px 26px -20px rgb(var(--shadow-warm) / .5); }
-  .sugg .top { display: flex; align-items: center; gap: 8px; }
-  .sugg .new { font-size: 0.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: rgb(var(--accent)); background: rgb(var(--accent-soft)); padding: 2px 7px; border-radius: 999px; }
-  .sugg .match { margin-left: auto; font-size: 0.66rem; color: rgb(var(--ink-faint)); font-variant-numeric: tabular-nums; }
-  .sugg .q { font-size: 0.84rem; line-height: 1.45; color: rgb(var(--ink)); }
-  .sugg .q b { font-weight: 600; }
-  .sugg .meta { font-size: 0.68rem; color: rgb(var(--ink-faint)); display: flex; align-items: center; gap: 7px; }
-  .sugg .meta .chip { color: rgb(var(--ink-muted)); background: rgb(var(--surface-subtle)); padding: 1px 6px; border-radius: 6px; font-weight: 600; }
-  .sugg .acts { display: flex; gap: 8px; }
-  .sugg .acts button { font-size: 0.74rem; font-weight: 550; padding: 7px 12px; border-radius: 9px; transition: transform .14s, background-color .14s, color .14s; }
-  .sugg .acts .create { background: rgb(var(--accent)); color: rgb(var(--accent-ink)); flex: 1; }
-  .sugg .acts .create:hover { transform: translateY(-1px); }
-  .sugg .acts .dismiss { background: transparent; color: rgb(var(--ink-muted)); border: 1px solid rgb(var(--border)); }
-  .sugg .acts .dismiss:hover { color: rgb(var(--ink)); background: rgb(var(--surface-muted)); }
+  .sugg .top { display: flex; align-items: center; justify-content: space-between; }
+  .sugg .new {
+    font-size: .68rem; font-weight: 600; letter-spacing: .03em;
+    background: rgb(var(--end-soft)); color: rgb(var(--panel-clay));
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .sugg .match { font-size: .76rem; color: rgb(var(--panel-fnt)); }
+  .sugg .q { font-size: .9rem; line-height: 1.45; }
+  .sugg .q b { color: rgb(var(--panel-clay)); font-weight: 600; }
+  .sugg .meta { font-size: .78rem; color: rgb(var(--panel-mut)); }
+  .sugg .chip {
+    display: inline-block; background: rgb(var(--end-soft)); color: rgb(var(--panel-clay));
+    border-radius: 6px; padding: 1px 7px; font-weight: 600; font-size: .76rem;
+  }
+  .sugg .acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+  .sugg .acts .ghost, .sugg .acts .fill {
+    font: inherit; font-size: .8rem; font-weight: 600; border-radius: 8px;
+    padding: 7px 13px; border: 0; cursor: default;
+  }
+  .sugg .acts .ghost { background: transparent; color: rgb(var(--panel-mut)); }
+  .sugg .acts .fill { background: rgb(var(--panel-clay)); color: rgb(32 24 18); }
 
-  /* confidence meter (feature 2) */
-  .meter { height: 6px; border-radius: 999px; background: rgb(var(--surface-subtle)); overflow: hidden; }
-  .meter i { display: block; height: 100%; border-radius: 999px; background: rgb(var(--accent)); transform-origin: left; }
-  .reveal.in .meter i { animation: meter-grow .9s .15s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes meter-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .meter { height: 6px; border-radius: 3px; background: rgb(var(--panel-edge)); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; border-radius: 3px; background: rgb(var(--panel-clay)); transition: width 1s var(--ease-quint) .25s; }
+  .in-view .meter i { width: var(--w, 91%); }
 
-  /* reminder picker (feature 3) */
+  .quiet-note { font-size: .78rem; color: rgb(var(--panel-fnt)); line-height: 1.55; margin: 0 2px; }
+
+  /* tab strip demo, chapter I */
+  .strip-demo { border-radius: 18px 18px 0 0; }
+  .browser-chrome {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-bottom: 1px solid rgb(var(--panel-edge));
+  }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: rgb(var(--panel-edge)); }
+  .omnibox {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: rgb(var(--panel-edge) / .4); border-radius: 8px;
+    padding: 6px 11px; font-size: .76rem; color: rgb(var(--panel-mut));
+  }
+  .tabstrip { display: flex; gap: 6px; padding: 10px 12px; flex-wrap: nowrap; overflow: hidden; }
+  .ts-tab {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgb(var(--panel-edge) / .45); border: 1px solid rgb(var(--panel-edge));
+    border-radius: 8px; padding: 6px 11px; font-size: .76rem; color: rgb(var(--panel-mut));
+    white-space: nowrap;
+    transition: transform .7s var(--ease-quint), background-color .5s var(--ease), border-color .5s var(--ease);
+  }
+  .ts-tab .fv { width: 14px; height: 14px; border-radius: 4px; display: grid; place-items: center;
+    font-size: 8px; font-weight: 700; color: rgb(252 250 247); flex: none; }
+  .ts-group {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 10px; padding: 4px;
+    border: 1px dashed transparent;
+    transition: border-color .5s var(--ease), background-color .5s var(--ease);
+  }
+  .ts-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .72rem; font-weight: 600; color: rgb(32 24 18);
+    background: rgb(var(--panel-clay)); border-radius: 7px; padding: 4px 9px;
+    opacity: 0; transform: translateX(-6px) scale(.9);
+    transition: opacity .45s var(--ease) .55s, transform .45s var(--ease-quint) .55s;
+  }
+  .in-view .ts-group { border-color: rgb(var(--panel-clay) / .6); background: rgb(var(--panel-clay) / .08); }
+  .in-view .ts-pill { opacity: 1; transform: none; }
+  .in-view .ts-tab.gh { background: rgb(var(--panel-clay) / .14); border-color: rgb(var(--panel-clay) / .45); color: rgb(var(--panel-ink)); }
+  .replay {
+    position: absolute; right: 14px; bottom: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font: inherit; font-size: .74rem; font-weight: 600;
+    color: rgb(var(--panel-fnt)); background: transparent; border: 0; cursor: pointer;
+    padding: 6px 8px; border-radius: 7px;
+    transition: color .16s var(--ease), background-color .16s var(--ease);
+  }
+  .replay:hover { color: rgb(var(--panel-ink)); background: rgb(var(--panel-edge) / .5); }
+  .ch-mockwrap { position: relative; }
+
+  /* reminders, chapter III */
   .rem-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-  .rem-pills .rp {
-    font-size: 0.78rem; font-weight: 550; padding: 8px 13px; border-radius: 10px;
-    border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--ink-muted));
-    transition: border-color .14s, color .14s, background-color .14s, transform .14s;
+  .rp {
+    font: inherit; font-size: .82rem; font-weight: 500; cursor: default;
+    border: 1px solid rgb(var(--panel-edge)); background: transparent;
+    color: rgb(var(--panel-mut)); border-radius: 999px; padding: 7px 15px;
   }
-  .rem-pills .rp:hover { transform: translateY(-1px); color: rgb(var(--ink)); border-color: rgb(var(--border-strong)); }
-  .rem-pills .rp.sel { background: rgb(var(--accent)); color: rgb(var(--accent-ink)); border-color: rgb(var(--accent)); }
-  .rem-resolved {
-    margin-top: 4px; font-size: 0.72rem; color: rgb(var(--ink-faint));
-    display: flex; align-items: center; gap: 7px;
+  .rp.sel { background: rgb(var(--panel-clay)); border-color: rgb(var(--panel-clay)); color: rgb(32 24 18); font-weight: 600; }
+  .rem-resolved { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: rgb(var(--panel-fnt)); }
+  .rem-resolved b { color: rgb(var(--panel-mut)); font-weight: 600; }
+  .fired {
+    display: flex; align-items: center; gap: 11px;
+    border: 1px solid rgb(var(--panel-clay) / .45);
+    background: rgb(var(--panel-clay) / .1);
+    border-radius: 12px; padding: 12px 14px; margin-top: 4px;
+    font-size: .84rem;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity .55s var(--ease) .8s, transform .55s var(--ease-quint) .8s;
   }
-  .rem-fire {
-    margin-top: 12px; border: 1px solid rgb(var(--warning) / .4); background: rgb(var(--warning-soft) / .5);
-    border-radius: 11px; padding: 11px 12px; display: flex; gap: 10px; align-items: center;
-  }
-  .rem-fire .ic { color: rgb(var(--warning)); flex: none; }
-  .rem-fire .txt { font-size: 0.76rem; color: rgb(var(--ink)); line-height: 1.4; }
-  .rem-fire .txt b { font-weight: 600; }
-  .rem-fire .re { margin-left: auto; font-size: 0.7rem; font-weight: 600; color: rgb(var(--accent)); white-space: nowrap; }
+  .in-view .fired { opacity: 1; transform: none; }
+  .fired .ic { color: rgb(var(--panel-clay)); flex: none; }
+  .fired b { font-weight: 650; }
+  .fired .re { margin-left: auto; font-size: .78rem; font-weight: 600; color: rgb(var(--panel-clay)); white-space: nowrap; }
 
-  /* notes panel (feature 4) */
-  .note { border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 12px; background: rgb(var(--surface)); display: grid; gap: 8px; }
-  .note.pinned { border-color: rgb(var(--accent) / .35); background: rgb(var(--accent-soft) / .25); }
-  .note .nh { display: flex; align-items: center; gap: 8px; }
-  .note .url { font-size: 0.68rem; color: rgb(var(--ink-faint)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .note .pin { margin-left: auto; color: rgb(var(--ink-faint)); display: inline-grid; place-items: center; }
-  .note.pinned .pin { color: rgb(var(--accent)); }
-  .note .ntext { font-size: 0.82rem; color: rgb(var(--ink)); line-height: 1.5; }
-  .note .ntext code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78em; background: rgb(var(--surface-subtle)); padding: 1px 5px; border-radius: 5px; }
-  .note .ntext b { font-weight: 600; }
-
-  /* ============================================================== PRIVACY */
-  .privacy { background: rgb(var(--surface-muted)); border-top: 1px solid rgb(var(--border)); border-bottom: 1px solid rgb(var(--border)); position: relative; overflow: clip; }
-  .privacy::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(60% 80% at 50% -10%, rgb(var(--accent) / .06), transparent 60%);
+  /* notes, chapter IV */
+  .note {
+    border: 1px solid rgb(var(--panel-edge)); border-radius: 12px; padding: 12px 14px;
+    display: grid; gap: 7px; background: rgb(var(--panel-edge) / .25);
   }
-  .privacy-grid { position: relative; display: grid; grid-template-columns: 1fr; gap: clamp(36px, 5vw, 60px); align-items: start; }
-  @media (min-width: 900px) { .privacy-grid { grid-template-columns: 0.92fr 1.08fr; } }
-  .privacy .lockmark {
-    width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center;
-    background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); color: rgb(var(--accent));
-    box-shadow: 0 10px 24px -16px rgb(var(--accent) / .5);
+  .note.pinned { border-color: rgb(var(--panel-clay) / .5); }
+  .note .nh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .note .url { font-size: .73rem; color: rgb(var(--panel-fnt)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .note .pin { color: rgb(var(--panel-clay)); flex: none; }
+  .note .ntext { font-size: .86rem; line-height: 1.5; color: rgb(var(--panel-mut)); }
+  .note .ntext b { color: rgb(var(--panel-ink)); font-weight: 600; }
+  .note .ntext code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .78rem;
+    background: rgb(var(--panel-edge) / .6); border-radius: 4px; padding: 1px 5px;
   }
-  .guarantees { display: grid; gap: 2px; }
-  .guarantees li {
-    display: flex; gap: 13px; align-items: flex-start;
-    padding: 15px 4px; border-bottom: 1px solid rgb(var(--border));
+
+  /* also bound in */
+  .bound-strip {
+    margin-top: clamp(40px, 6vw, 64px);
+    border-top: 1px solid rgb(var(--border));
+    padding-top: clamp(28px, 4vw, 40px);
+    display: grid; grid-template-columns: auto 1fr; gap: 16px 40px; align-items: baseline;
   }
-  .guarantees li:last-child { border-bottom: 0; }
-  .guarantees .check {
-    width: 22px; height: 22px; border-radius: 7px; flex: none; margin-top: 1px;
-    display: grid; place-items: center; color: rgb(var(--success));
-    background: rgb(var(--success-soft) / .6); border: 1px solid rgb(var(--success) / .3);
+  .bound-strip .label { font-family: var(--serif); font-style: italic; font-size: .95rem; color: rgb(var(--ink-faint)); white-space: nowrap; }
+  .bound-strip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+  .bound-strip li { font-size: .9rem; color: rgb(var(--ink-muted)); display: inline-flex; align-items: center; gap: 9px; }
+  .bound-strip kbd {
+    font-family: var(--sans); font-size: .76rem; font-weight: 600;
+    border: 1px solid rgb(var(--border-strong)); border-bottom-width: 2px;
+    border-radius: 6px; padding: 2px 7px; color: rgb(var(--ink-muted));
   }
-  .guarantees .g-t { font-size: 0.95rem; font-weight: 550; color: rgb(var(--ink)); }
-  .guarantees .g-d { font-size: 0.85rem; color: rgb(var(--ink-muted)); line-height: 1.5; margin-top: 2px; }
 
-  .stats { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 26px; }
-  .stats .s { display: grid; }
-  .stats .s b { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; letter-spacing: -0.01em; color: rgb(var(--ink)); font-variant-numeric: tabular-nums; line-height: 1.1; }
-  .stats .s span { font-size: 0.74rem; color: rgb(var(--ink-faint)); font-weight: 500; }
-
-  /* ============================================================== SURFACES */
-  .surfaces-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 44px; }
-  @media (min-width: 760px) { .surfaces-grid { grid-template-columns: repeat(3, 1fr); } }
-  .surface-card {
-    border: 1px solid rgb(var(--border)); border-radius: 15px; overflow: hidden;
-    background: rgb(var(--surface)); display: flex; flex-direction: column;
-    transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .18s, box-shadow .18s;
+  /* ---------- endpaper: privacy ---------- */
+  .endpaper {
+    background: rgb(var(--end));
+    color: rgb(var(--end-ink));
+    padding-block: clamp(80px, 11vw, 150px);
   }
-  .surface-card:hover { transform: translateY(-3px); border-color: rgb(var(--border-strong)); box-shadow: 0 22px 44px -30px rgb(var(--shadow-warm) / .5); }
-  .surface-card .viz { height: 158px; background: rgb(var(--surface-muted)); border-bottom: 1px solid rgb(var(--border)); position: relative; overflow: hidden; padding: 14px; }
-  .surface-card .cap { padding: 16px; }
-  .surface-card .cap h4 { font-size: 0.98rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .surface-card .cap h4 svg { color: rgb(var(--accent)); }
-  .surface-card .cap p { font-size: 0.85rem; color: rgb(var(--ink-muted)); margin-top: 7px; line-height: 1.5; }
+  .endpaper .folio { color: rgb(var(--end-clay)); }
+  .endpaper .folio::after { background: rgb(var(--end-clay) / .4); }
+  .end-grid {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(40px, 6vw, 96px); align-items: start;
+  }
+  .endpaper h2 { color: rgb(var(--end-ink)); max-width: 16ch; }
+  .endpaper .lede { color: rgb(var(--end-mut)); margin-top: 20px; }
+  .ledger { margin-top: 38px; border-top: 1px solid rgb(var(--end-soft)); }
+  .ledger-row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 24px;
+    padding: 13px 2px; border-bottom: 1px solid rgb(var(--end-soft));
+    font-size: .95rem;
+  }
+  .ledger-row .k { color: rgb(var(--end-mut)); }
+  .ledger-row .v { font-weight: 650; color: rgb(var(--end-ink)); white-space: nowrap; }
+  .ledger-row .v.clay { color: rgb(var(--end-clay)); }
 
-  /* tiny viz primitives */
-  .v-row { height: 9px; border-radius: 5px; background: rgb(var(--surface-subtle)); margin-bottom: 8px; }
-  .v-row.w70 { width: 70%; } .v-row.w50 { width: 50%; } .v-row.w85 { width: 85%; } .v-row.w40 { width: 40%; }
-  .v-accent { background: rgb(var(--accent) / .5); }
-  .v-chip { display: inline-block; height: 18px; border-radius: 6px; background: rgb(var(--surface-subtle)); margin: 0 5px 6px 0; }
-  .v-panel { position: absolute; top: 14px; right: 14px; bottom: 14px; width: 38%; border-radius: 9px; background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); padding: 9px; }
-  .v-pop { position: absolute; inset: auto 14px 14px 14px; border-radius: 9px; background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); padding: 10px; box-shadow: 0 10px 22px -16px rgb(var(--shadow-warm) / .5); }
+  .guarantees { list-style: none; margin: 0; padding: 0; display: grid; }
+  .guarantees li { padding: 22px 0; border-bottom: 1px solid rgb(var(--end-soft)); display: grid; gap: 7px; }
+  .guarantees li:first-child { padding-top: 6px; }
+  .g-t { font-weight: 650; font-size: 1.02rem; display: flex; align-items: center; gap: 11px; }
+  .g-t svg { color: rgb(var(--end-clay)); flex: none; }
+  .g-d { font-size: .92rem; line-height: 1.6; color: rgb(var(--end-mut)); }
+  .g-d code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .8rem;
+    background: rgb(var(--end-soft)); padding: 1px 6px; border-radius: 4px;
+  }
 
-  /* ============================================================== FAQ */
-  .faq-list { margin-top: 36px; border-top: 1px solid rgb(var(--border)); max-width: 760px; }
+  /* ---------- surfaces ---------- */
+  .spread { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 16px; margin-top: clamp(36px, 5vw, 56px); }
+  .surf {
+    border: 1px solid rgb(var(--border)); border-radius: 16px; overflow: hidden;
+    background: rgb(var(--surface-muted));
+    transition: border-color .2s var(--ease), transform .25s var(--ease-quint), box-shadow .25s var(--ease);
+  }
+  .surf:hover { border-color: rgb(var(--border-strong)); transform: translateY(-3px); box-shadow: 0 18px 36px -22px rgb(var(--ink) / .3); }
+  .surf .viz { position: relative; height: 168px; background: rgb(var(--surface-subtle) / .6); overflow: hidden; }
+  .surf .cap { padding: 18px 20px 20px; }
+  .surf .cap h4 { margin: 0; font-size: 1rem; font-weight: 650; display: flex; align-items: center; gap: 9px; }
+  .surf .cap h4 svg { color: rgb(var(--accent)); flex: none; }
+  .surf .cap p { margin: 7px 0 0; font-size: .88rem; line-height: 1.6; color: rgb(var(--ink-muted)); }
+  /* mini panel sketches */
+  .sk-panel {
+    position: absolute; border-radius: 10px;
+    background: rgb(var(--panel)); border: 1px solid rgb(var(--panel-edge));
+    padding: 10px;
+  }
+  .sk-row { height: 7px; border-radius: 4px; background: rgb(var(--panel-edge)); margin-top: 7px; }
+  .sk-row:first-child { margin-top: 0; }
+  .sk-row.clay { background: rgb(var(--panel-clay) / .85); }
+  .sk-chip { display: inline-block; height: 16px; border-radius: 999px; background: rgb(var(--panel-edge)); margin-right: 6px; margin-top: 8px; }
+  .sk-chip.clay { background: rgb(var(--panel-clay) / .85); }
+
+  /* ---------- FAQ ---------- */
+  .faq-list { max-width: 760px; margin-top: clamp(28px, 4vw, 44px); border-top: 1px solid rgb(var(--border)); }
   .faq-item { border-bottom: 1px solid rgb(var(--border)); }
   .faq-q {
-    width: 100%; display: flex; align-items: center; gap: 16px; text-align: left;
-    padding: 20px 4px; background: transparent; border: 0;
-    font-size: clamp(1rem, 1.3vw, 1.12rem); font-weight: 550; color: rgb(var(--ink));
-    transition: color .16s;
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    background: none; border: 0; cursor: pointer; text-align: left;
+    font: inherit; font-family: var(--serif); font-size: 1.12rem; font-weight: 540;
+    color: rgb(var(--ink)); padding: 21px 2px;
+    transition: color .16s var(--ease);
   }
-  .faq-q:hover { color: rgb(var(--accent)); }
-  .faq-q .pm {
-    margin-left: auto; flex: none; width: 26px; height: 26px; border-radius: 8px;
-    display: grid; place-items: center; color: rgb(var(--ink-muted));
-    background: rgb(var(--surface-muted)); border: 1px solid rgb(var(--border));
-    transition: transform .22s cubic-bezier(.2,.8,.2,1), color .16s, background-color .16s;
+  .faq-q:hover { color: rgb(var(--accent-deep)); }
+  .faq-q .pm { flex: none; color: rgb(var(--ink-faint)); transition: transform .3s var(--ease-quint); }
+  .faq-item.open .faq-q .pm { transform: rotate(45deg); color: rgb(var(--accent)); }
+  .faq-a {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .4s var(--ease-quint);
   }
-  .faq-item[aria-expanded="true"] .pm { transform: rotate(45deg); color: rgb(var(--accent)); }
-  .faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .26s cubic-bezier(.2,.8,.2,1); }
-  .faq-item[aria-expanded="true"] .faq-a { grid-template-rows: 1fr; }
   .faq-a > div { overflow: hidden; }
-  .faq-a p { color: rgb(var(--ink-muted)); font-size: 0.96rem; line-height: 1.6; padding: 0 44px 22px 4px; max-width: 64ch; }
-  .faq-a p code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.84em; background: rgb(var(--surface-subtle)); padding: 1px 5px; border-radius: 5px; }
-
-  /* ============================================================== FINAL CTA */
-  .cta-band { position: relative; overflow: clip; }
-  .cta-inner {
-    border-radius: 22px; border: 1px solid rgb(var(--border));
-    background:
-      radial-gradient(80% 120% at 50% -20%, rgb(var(--accent) / .10), transparent 60%),
-      rgb(var(--surface-muted));
-    padding: clamp(40px, 6vw, 72px) clamp(24px, 5vw, 56px);
-    text-align: center; position: relative; overflow: hidden;
+  .faq-item.open .faq-a { grid-template-rows: 1fr; }
+  .faq-a p { margin: 0 0 22px; max-width: 64ch; color: rgb(var(--ink-muted)); font-size: .95rem; line-height: 1.7; }
+  .faq-a code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .82rem;
+    background: rgb(var(--surface-subtle)); padding: 1px 6px; border-radius: 4px;
   }
-  .cta-inner .grain { position: absolute; inset: 0; opacity: .03; pointer-events: none; }
-  .cta-inner h2 { font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 600; letter-spacing: -0.015em; line-height: 1.08; max-width: 18ch; margin-inline: auto; }
-  .cta-inner p { color: rgb(var(--ink-muted)); margin: 18px auto 0; max-width: 48ch; font-size: 1.05rem; line-height: 1.55; }
-  .cta-inner .acts { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-  .cta-inner .fine { margin-top: 18px; font-size: 0.8rem; color: rgb(var(--ink-faint)); }
 
-  /* ============================================================== FOOTER */
-  footer.site { border-top: 1px solid rgb(var(--border)); background: rgb(var(--surface-muted)); }
+  /* ---------- closing CTA ---------- */
+  .close-cta { text-align: center; padding-block: clamp(80px, 11vw, 150px); position: relative; overflow: clip; }
+  .close-cta .mark-lg { margin: 0 auto 30px; width: 64px; }
+  .close-cta h2 { max-width: 17ch; margin-inline: auto; }
+  .close-cta p { max-width: 46ch; margin: 18px auto 0; color: rgb(var(--ink-muted)); }
+  .close-cta .acts { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+  .close-cta .fine { margin-top: 22px; font-size: .82rem; color: rgb(var(--ink-faint)); }
+
+  /* ---------- colophon ---------- */
+  footer.site { border-top: 1px solid rgb(var(--border)); }
   .foot {
-    display: grid; gap: 28px; padding-block: 44px 36px;
-    grid-template-columns: 1fr;
+    display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 40px;
+    padding-block: clamp(44px, 6vw, 64px) 36px;
   }
-  @media (min-width: 720px) { .foot { grid-template-columns: 1.4fr 1fr 1fr; } }
-  .foot .about { max-width: 34ch; }
-  .foot .about p { font-size: 0.86rem; color: rgb(var(--ink-muted)); margin-top: 12px; line-height: 1.55; }
-  .foot h5 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--ink-faint)); font-weight: 600; margin-bottom: 12px; }
-  .foot ul { display: grid; gap: 9px; }
-  .foot ul a { font-size: 0.88rem; color: rgb(var(--ink-muted)); display: inline-flex; align-items: center; gap: 7px; transition: color .14s; }
-  .foot ul a:hover { color: rgb(var(--accent)); }
-  .foot-bottom {
-    border-top: 1px solid rgb(var(--border)); padding-block: 20px;
-    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-    font-size: 0.8rem; color: rgb(var(--ink-faint));
+  .foot .about p { margin: 14px 0 0; font-size: .9rem; color: rgb(var(--ink-muted)); max-width: 34ch; line-height: 1.65; }
+  .foot h5 {
+    margin: 0 0 14px; font-size: .76rem; font-weight: 650; letter-spacing: .05em;
+    text-transform: uppercase; color: rgb(var(--ink-faint));
   }
-  .foot-bottom .made { display: inline-flex; align-items: center; gap: 8px; }
+  .foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .foot ul a {
+    font-size: .9rem; color: rgb(var(--ink-muted)); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: color .16s var(--ease);
+  }
+  .foot ul a:hover { color: rgb(var(--ink)); }
+  .colophon {
+    border-top: 1px solid rgb(var(--border));
+    padding-block: 24px 30px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px;
+    font-size: .82rem; color: rgb(var(--ink-faint));
+  }
+  .colophon .set { font-family: var(--serif); font-style: italic; }
 
-  /* ============================================================== REVEAL */
-  .reveal { opacity: 0; transform: translateY(10px); transition: opacity .5s cubic-bezier(.2,.8,.2,1), transform .5s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--i, 0) * 70ms); will-change: opacity, transform; }
-  .reveal.in { opacity: 1; transform: none; }
-
+  /* ---------- reveal motion ---------- */
+  .reveal { opacity: 0; transform: translateY(16px); }
+  .reveal.shown {
+    opacity: 1; transform: none;
+    transition: opacity .7s var(--ease) calc(var(--i, 0) * 90ms),
+                transform .7s var(--ease-quint) calc(var(--i, 0) * 90ms);
+  }
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after {
-      animation-duration: .001ms !important; animation-iteration-count: 1 !important;
-      transition-duration: .001ms !important;
-    }
     .reveal { opacity: 1; transform: none; }
-    /* show the hero demo in its resolved, grouped state */
-    .anim .tab-group { border-color: rgb(var(--accent) / .45); background-color: rgb(var(--accent) / .06); }
-    .anim .group-pill, .anim .tab-group .tab.gh, .anim .panel-pop { opacity: 1; transform: none; }
+    .reveal.shown, .fold, .btn, .ts-tab, .ts-pill, .fired, .meter i, .faq-a { transition: none !important; }
+    .in-view .fired, .in-view .ts-pill { transition: none !important; }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 980px) {
+    .hero-grid { grid-template-columns: 1fr; padding-block: clamp(52px, 8vw, 80px) clamp(48px, 7vw, 72px); }
+    .fold-scene { order: 2; margin-top: 8px; }
+    .chapter { grid-template-columns: 1fr; gap: 28px; }
+    .chapter.flip > .ch-copy { order: 0; }
+    .end-grid { grid-template-columns: 1fr; }
+    .spread { grid-template-columns: 1fr 1fr; }
+    .surf:first-child { grid-column: 1 / -1; }
+    .foot { grid-template-columns: 1fr 1fr; }
+    .foot .about { grid-column: 1 / -1; }
+  }
+  @media (max-width: 600px) {
+    .spread { grid-template-columns: 1fr; }
+    .surf:first-child { grid-column: auto; }
+    .bound-strip { grid-template-columns: 1fr; gap: 12px; }
+    .hero-cta .btn { flex: 1; justify-content: center; }
   }
   </style>
-</head>
-<body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  </head>
+<body id="top">
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ===================================================== HEADER ===== -->
-  <header class="site" id="top">
+  <!-- ============================================== header ===== -->
+  <header class="site">
     <div class="wrap">
       <div class="nav">
         <a class="brand" href="#top" aria-label="Quarto home">
@@ -723,101 +690,84 @@
           </svg>
           <span class="wordmark">quarto<span class="dot" aria-hidden="true"></span></span>
         </a>
-
         <nav class="links" aria-label="Primary">
-          <a href="#features">Features</a>
+          <a href="#chapters">Chapters</a>
           <a href="#privacy">Privacy</a>
           <a href="#surfaces">Surfaces</a>
-          <a href="#faq">FAQ</a>
+          <a href="#faq">Questions</a>
         </nav>
-
-        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme">
-          <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-          <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        </button>
-
-        <a class="btn btn-primary btn-sm" href="#install" data-cta="header" aria-label="Add to Chrome">
-          <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <span class="header-cta-label">Add to Chrome</span>
-        </a>
+        <div class="nav-right">
+          <button class="theme-btn" id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+            <svg class="moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+            <svg class="sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </button>
+          <a class="btn btn-primary header-cta" href="#install" data-cta="header">
+            <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span class="header-cta-label">Add to Chrome</span>
+          </a>
+        </div>
       </div>
     </div>
   </header>
 
   <main id="main">
-    <!-- ===================================================== HERO ===== -->
-    <section class="hero">
-      <div class="hero-bg" aria-hidden="true">
-        <div class="spot"></div>
-        <svg class="grain" width="100%" height="100%"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>
-      </div>
-
+    <!-- ============================================== the cover ===== -->
+    <section class="hero" aria-label="Introduction">
       <div class="wrap">
         <div class="hero-grid">
           <div class="hero-copy">
-            <span class="hero-pill reveal"><span class="tag">On-device</span> Your tabs, neatly bound</span>
-            <h1 class="reveal" style="--i:1">Tabs you can<br><span class="accent">think with.</span></h1>
-            <p class="subhead reveal" style="--i:2">Smart, private tab grouping, reminders, and notes. Everything runs on your machine. Nothing is sent anywhere, and nothing is auto-applied without a click.</p>
+            <p class="folio reveal" style="margin:0 0 26px">A Chrome extension, bound in quarto</p>
+            <h1 class="reveal" style="--i:1">Tabs you can<br /><span class="turn">think</span> with.</h1>
+            <p class="sub reveal" style="--i:2">Quarto folds a noisy tab strip into labeled groups, quiet reminders, and a note for every page. All of it on your machine. None of it without your click.</p>
             <div class="hero-cta reveal" style="--i:3">
-              <a class="btn btn-primary" href="#install" data-cta="hero">
+              <a class="btn btn-primary" href="#install" data-cta="hero" data-magnetic>
                 <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                 Add to Chrome
               </a>
-              <a class="btn btn-ghost" href="#features">See how it works</a>
+              <a class="btn btn-ghost" href="#chapters">Read the chapters</a>
             </div>
             <div class="hero-meta reveal" style="--i:4">
-              <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Requires Chrome 116+</span>
               <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Free</span>
               <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No account</span>
+              <span><svg class="ok" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Chrome 116+</span>
             </div>
           </div>
 
-          <!-- the centerpiece: loose tabs gather into a tidy group -->
-          <div class="hero-demo reveal" style="--i:2">
-            <div class="device anim" role="img" aria-label="A browser tab strip where three loose tabs from github.com gather into a single tidy clay-colored group, while a side-panel card asks whether to group them.">
-              <div class="device-chrome">
-                <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
-                <div class="omnibox">
-                  <svg class="lock" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                  <span>github.com/quarto/issues</span>
+          <div class="fold-scene reveal" style="--i:2">
+            <div>
+              <div class="fold" id="fold" role="img" aria-label="Four paper leaves: a tab group pill, a reminder time, a margin note, and a command-K shortcut. One sheet folded into four capabilities.">
+                <div class="leaf">
+                  <div>
+                    <span class="v-group"><i></i>github · 5</span>
+                    <div class="v-tabs"><span class="v-tab"></span><span class="v-tab"></span><span class="v-tab"></span></div>
+                  </div>
+                  <span class="leaf-cap">Gather</span>
+                </div>
+                <div class="leaf">
+                  <div class="v-time">
+                    <svg class="v-bell" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom:8px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                    Fires at 4:30 PM
+                    <small>even if the tab is closed</small>
+                  </div>
+                  <span class="leaf-cap">Return</span>
+                </div>
+                <div class="leaf">
+                  <p class="v-note" style="margin:0"><b>Stopped at</b> the threshold math. Resume from §4.</p>
+                  <span class="leaf-cap">Recall</span>
+                </div>
+                <div class="leaf leaf-clay">
+                  <div class="v-kbd">⌘K <span>find anything</span></div>
+                  <span class="leaf-cap">Find</span>
                 </div>
               </div>
-
-              <div class="tabstrip" id="tabstrip">
-                <div class="tab"><span class="fav" style="background:#3b6bd6">G</span><span class="ttl">Gmail</span></div>
-                <div class="tab-group">
-                  <span class="group-pill"><span class="gdot"></span>github · 3</span>
-                  <div class="tab gh"><span class="fav fav-gh">GH</span><span class="ttl">Issues</span></div>
-                  <div class="tab gh"><span class="fav fav-gh">GH</span><span class="ttl">PR #42</span></div>
-                  <div class="tab gh"><span class="fav fav-gh">GH</span><span class="ttl">Actions</span></div>
-                </div>
-                <div class="tab"><span class="fav" style="background:#cf7a2e">F</span><span class="ttl">Figma</span></div>
-              </div>
-
-              <div class="device-page" aria-hidden="true">
-                <div class="ph"></div>
-                <div class="pl w90"></div>
-                <div class="pl w80"></div>
-                <div class="pl w60"></div>
-                <div class="pl accent w35"></div>
-              </div>
-
-              <div class="panel-pop" aria-hidden="true">
-                <div class="ph"><span class="badge">New group</span><span class="match tnum">78% match</span></div>
-                <div class="q">3 tabs look related. Group as <b>“github”</b>?</div>
-                <div class="label-row">Label <span class="chip">github</span> · <span class="tnum">3 tabs</span></div>
-                <div class="acts">
-                  <span class="mini ghost">Dismiss</span>
-                  <span class="mini primary">Create group</span>
-                </div>
-              </div>
+              <p class="fold-caption">One sheet, folded twice: four leaves.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===================================================== TRUST ===== -->
+    <!-- ============================================== trust ===== -->
     <section class="trust" aria-label="At a glance">
       <div class="wrap">
         <div class="row">
@@ -828,226 +778,251 @@
           <span class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M16 3l5 1-1 5"/></svg>No sync</span>
           <span class="sep" aria-hidden="true"></span>
           <span class="item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5 5-5"/><path d="M12 4v12"/></svg>Export anytime</span>
-          <span class="sep" aria-hidden="true"></span>
-          <span class="item">Requires Chrome 116+. Free. No account.</span>
         </div>
       </div>
     </section>
 
-    <!-- ===================================================== FEATURES ===== -->
-    <section class="section" id="features">
+    <!-- ============================================== the chapters ===== -->
+    <section class="part" id="chapters" aria-label="Features">
       <div class="wrap">
-        <div class="section-head reveal">
-          <span class="eyebrow">The craft</span>
-          <h2 class="title">Small, local heuristics. Visible at every step.</h2>
-          <p class="lede">No magic, no cloud model. Quarto reads the tab metadata Chrome already exposes, does the quiet work of sorting it, and waits for you to decide.</p>
+        <div class="part-head reveal">
+          <p class="folio" style="margin:0">The chapters</p>
+          <h2>Four leaves. No magic.</h2>
+          <p class="lede">Quarto reads only the tab metadata Chrome already exposes, sorts it with small local heuristics, and waits for you to decide. Each capability is one leaf of the fold.</p>
         </div>
 
-        <div style="margin-top: clamp(48px, 7vw, 88px)">
+        <div style="margin-top: clamp(20px, 3vw, 36px)">
 
-          <!-- Feature 1 — Smart group suggestions -->
-          <article class="feature">
-            <div class="copy reveal">
-              <span class="num tnum">01</span>
-              <h3>Smart group suggestions</h3>
+          <!-- Leaf I · Gather -->
+          <article class="chapter">
+            <div class="ch-copy reveal">
+              <p class="ch-leafno" style="margin:0">Leaf I · Gather</p>
+              <h3>Loose tabs, gathered.</h3>
               <p class="body">Quarto clusters related tabs with domain bucketing and a token-similarity pass, then asks. “5 tabs from github.com, group them?” It surfaces the idea without thrashing your strip every time you open a tab.</p>
-              <ul class="notes">
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Ranked by a confidence score you can see.</li>
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Suggestions are suggestions. Nothing applies until you click.</li>
+              <ul class="ch-notes">
+                <li>Ranked by a <b>confidence score</b> you can see.</li>
+                <li><b>Suggestions are suggestions.</b> Nothing applies until you click.</li>
               </ul>
             </div>
-            <div class="mock reveal" style="--i:1" aria-label="Side panel showing two group suggestions, each with a confidence match and Create group action.">
-              <div class="mock-head">
-                <span class="ttl">
-                  <svg width="16" height="16" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 5h14a2 2 0 0 1 2 2v3H7V7a2 2 0 0 1 2-2z" fill="currentColor" opacity=".18"/><rect x="7" y="9" width="18" height="11" rx="2" fill="currentColor" opacity=".18"/><path d="M11 11h10a2 2 0 0 1 2 2v2H9v-2a2 2 0 0 1 2-2z" fill="rgb(var(--accent))"/><rect x="9" y="14" width="14" height="9" rx="2" fill="rgb(var(--accent))"/></svg>
-                  quarto
-                </span>
-                <span class="right"><span class="pillcount tnum">2 ideas</span></span>
-              </div>
-              <div class="mock-tabs" role="presentation">
-                <span class="mt active">Suggestions</span><span class="mt">Note</span><span class="mt">Groups</span><span class="mt">Reminders</span>
-              </div>
-              <div class="mock-body">
-                <div class="sugg">
-                  <div class="top"><span class="new">New group</span><span class="match tnum">82% match</span></div>
-                  <div class="q">5 tabs look related. Group as <b>“github”</b>?</div>
-                  <div class="meta">Label <span class="chip">github</span> · <span class="tnum">5 tabs</span></div>
-                  <div class="acts"><button class="dismiss">Dismiss</button><button class="create">Create group</button></div>
+            <div class="ch-mockwrap reveal" style="--i:1">
+              <div class="panel watch" role="img" aria-label="A browser tab strip where three github tabs gather into a clay-colored group, and a side-panel card asks whether to create the group.">
+                <div class="browser-chrome">
+                  <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <div class="omnibox">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    github.com/quarto/issues
+                  </div>
                 </div>
-                <div class="sugg">
-                  <div class="top"><span class="new">New group</span><span class="match tnum">71% match</span></div>
-                  <div class="q">3 tabs look related. Group as <b>“figma”</b>?</div>
-                  <div class="meta">Label <span class="chip">figma</span> · <span class="tnum">3 tabs</span></div>
-                  <div class="acts"><button class="dismiss">Dismiss</button><button class="create">Create group</button></div>
+                <div class="tabstrip">
+                  <span class="ts-tab"><span class="fv" style="background:#5a7bc4">G</span>Gmail</span>
+                  <span class="ts-group">
+                    <span class="ts-pill">github · 3</span>
+                    <span class="ts-tab gh"><span class="fv" style="background:#6e5494">GH</span>Issues</span>
+                    <span class="ts-tab gh"><span class="fv" style="background:#6e5494">GH</span>PR #42</span>
+                    <span class="ts-tab gh"><span class="fv" style="background:#6e5494">GH</span>Actions</span>
+                  </span>
+                  <span class="ts-tab"><span class="fv" style="background:#c4762e">F</span>Figma</span>
+                </div>
+                <div class="panel-body" style="border-top:1px solid rgb(var(--panel-edge))">
+                  <div class="sugg">
+                    <div class="top"><span class="new">New group</span><span class="match tnum">82% match</span></div>
+                    <div class="q">3 tabs look related. Group as <b>“github”</b>?</div>
+                    <div class="meta">Label <span class="chip">github</span> · <span class="tnum">3 tabs</span></div>
+                    <div class="acts"><button class="ghost" tabindex="-1">Dismiss</button><button class="fill" tabindex="-1">Create group</button></div>
+                  </div>
                 </div>
               </div>
+              <button class="replay" type="button" data-replay aria-label="Replay the grouping animation">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M16 3l5 1-1 5"/></svg>
+                Replay
+              </button>
             </div>
           </article>
 
-          <!-- Feature 2 — Add-to-group hints -->
-          <article class="feature flip">
-            <div class="copy reveal">
-              <span class="num tnum">02</span>
-              <h3>Add-to-group hints</h3>
+          <!-- Leaf II · File -->
+          <article class="chapter flip">
+            <div class="ch-copy reveal">
+              <p class="ch-leafno" style="margin:0">Leaf II · File</p>
+              <h3>New tabs find their place.</h3>
               <p class="body">Open a new tab and Quarto scores it against your live groups. A confident match becomes a single, calm prompt. A weak one stays quiet.</p>
-              <ul class="notes">
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>One click to file it, one to dismiss.</li>
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>The threshold lives in Options. Tune it to taste.</li>
+              <ul class="ch-notes">
+                <li><b>One click</b> to file it, one to dismiss.</li>
+                <li>The threshold lives in Options. <b>Tune it to taste.</b></li>
               </ul>
             </div>
-            <div class="mock reveal" style="--i:1" aria-label="A prompt scoring a new tab against an existing group with a 91 percent confidence meter.">
-              <div class="mock-head">
-                <span class="ttl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--accent))" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg> New tab opened</span>
-                <span class="right"><span class="pillcount">github.com</span></span>
-              </div>
-              <div class="mock-body">
-                <div class="sugg" style="cursor:default">
-                  <div class="top"><span class="new">Add to group</span><span class="match tnum">91% match</span></div>
-                  <div class="q">This looks like your <b>“github”</b> group.</div>
-                  <div class="meter" aria-hidden="true"><i style="width:91%"></i></div>
-                  <div class="meta">Confidence <span class="tnum">91%</span> · threshold <span class="tnum">70%</span></div>
-                  <div class="acts"><button class="dismiss">Not now</button><button class="create">Add to “github”</button></div>
+            <div class="ch-mockwrap reveal" style="--i:1">
+              <div class="panel watch" role="img" aria-label="A prompt scoring a new tab against the github group, with a confidence meter filling to 91 percent.">
+                <div class="panel-head">
+                  <span class="ttl">New tab opened</span>
+                  <span class="meta">github.com</span>
                 </div>
-                <p style="font-size:.74rem;color:rgb(var(--ink-faint));line-height:1.5;margin:2px 2px 0">Below the threshold, Quarto says nothing. It would rather stay quiet than be wrong.</p>
+                <div class="panel-body">
+                  <div class="sugg">
+                    <div class="top"><span class="new">Add to group</span><span class="match tnum">91% match</span></div>
+                    <div class="q">This looks like your <b>“github”</b> group.</div>
+                    <div class="meter" style="--w:91%"><i></i></div>
+                    <div class="meta">Confidence <span class="tnum">91%</span> · threshold <span class="tnum">70%</span></div>
+                    <div class="acts"><button class="ghost" tabindex="-1">Not now</button><button class="fill" tabindex="-1">Add to “github”</button></div>
+                  </div>
+                  <p class="quiet-note">Below the threshold, Quarto says nothing. It would rather stay quiet than be wrong.</p>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- Feature 3 — Tab reminders -->
-          <article class="feature">
-            <div class="copy reveal">
-              <span class="num tnum">03</span>
-              <h3>Reminders that outlive the tab</h3>
+          <!-- Leaf III · Return -->
+          <article class="chapter">
+            <div class="ch-copy reveal">
+              <p class="ch-leafno" style="margin:0">Leaf III · Return</p>
+              <h3>Reminders that outlive the tab.</h3>
               <p class="body">Pick 1h, 3h, Tomorrow, or Next week. The reminder fires at the chosen time even if you closed the tab, and reopens it on click. The snooze always shows the resolved fire time, so you know exactly when it returns.</p>
-              <ul class="notes">
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Backed by Chrome alarms, so idle browsers still fire.</li>
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Custom durations, with your last choice remembered.</li>
+              <ul class="ch-notes">
+                <li>Backed by <b>Chrome alarms</b>, so idle browsers still fire.</li>
+                <li><b>Custom durations</b>, with your last choice remembered.</li>
               </ul>
             </div>
-            <div class="mock reveal" style="--i:1" aria-label="A reminder picker with one hour, three hours, tomorrow, and next week options, and a fired reminder that reopens the tab.">
-              <div class="mock-head">
-                <span class="ttl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--accent))" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg> Remind me about this tab</span>
-              </div>
-              <div class="mock-body">
-                <div class="rem-pills" role="group" aria-label="Reminder time">
-                  <button class="rp" type="button">1h</button>
-                  <button class="rp sel" type="button" aria-pressed="true">3h</button>
-                  <button class="rp" type="button">Tomorrow</button>
-                  <button class="rp" type="button">Next week</button>
+            <div class="ch-mockwrap reveal" style="--i:1">
+              <div class="panel watch" role="img" aria-label="A reminder picker with one hour, three hours, tomorrow and next week options, and a fired reminder offering to reopen the closed tab.">
+                <div class="panel-head">
+                  <span class="ttl">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--panel-clay))" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                    Remind me about this tab
+                  </span>
                 </div>
-                <div class="rem-resolved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Fires today at <span class="tnum" style="color:rgb(var(--ink-muted))">4:30 PM</span></div>
-                <div class="rem-fire">
-                  <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
-                  <span class="txt"><b>Reminder.</b> The tab you closed is ready.</span>
-                  <span class="re">Reopen ↗</span>
+                <div class="panel-body">
+                  <div class="rem-pills" role="group" aria-label="Reminder time">
+                    <button class="rp" type="button" tabindex="-1">1h</button>
+                    <button class="rp sel" type="button" tabindex="-1" aria-pressed="true">3h</button>
+                    <button class="rp" type="button" tabindex="-1">Tomorrow</button>
+                    <button class="rp" type="button" tabindex="-1">Next week</button>
+                  </div>
+                  <div class="rem-resolved">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    Fires today at <b class="tnum">4:30 PM</b>
+                  </div>
+                  <div class="fired">
+                    <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+                    <span><b>Reminder.</b> The tab you closed is ready.</span>
+                    <span class="re">Reopen ↗</span>
+                  </div>
                 </div>
               </div>
             </div>
           </article>
 
-          <!-- Feature 4 — Per-URL notes -->
-          <article class="feature flip">
-            <div class="copy reveal">
-              <span class="num tnum">04</span>
-              <h3>A note that remembers why</h3>
+          <!-- Leaf IV · Recall -->
+          <article class="chapter flip">
+            <div class="ch-copy reveal">
+              <p class="ch-leafno" style="margin:0">Leaf IV · Recall</p>
+              <h3>A note that remembers why.</h3>
               <p class="body">“Why did I open this? Where did I stop?” Keep a short Markdown note keyed to a normalized URL, so the context you built up does not evaporate next visit. Pin the ones worth keeping.</p>
-              <ul class="notes">
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Normalized URLs, so the note follows the page, not the query string.</li>
-                <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Stored locally. Never indexed, never sent.</li>
+              <ul class="ch-notes">
+                <li><b>Normalized URLs</b>, so the note follows the page, not the query string.</li>
+                <li>Stored locally. <b>Never indexed, never sent.</b></li>
               </ul>
             </div>
-            <div class="mock reveal" style="--i:1" aria-label="A notes panel with a pinned Markdown note and a second plain note, each keyed to a URL.">
-              <div class="mock-head">
-                <span class="ttl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--accent))" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v5h5"/><path d="M5 3h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg> Notes</span>
-                <span class="right"><span class="pillcount tnum">2 pinned</span></span>
-              </div>
-              <div class="mock-body">
-                <div class="note pinned">
-                  <div class="nh"><span class="url">developer.mozilla.org/.../IntersectionObserver</span>
-                    <span class="pin"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2l8 8-3 1-4 4v5l-2-2-4 4-1-1 4-4-2-2H7l4-4 1-3z"/></svg></span>
-                  </div>
-                  <div class="ntext">Use <code>rootMargin</code> to pre-load. <b>Stopped at</b> the stagger section, revisit threshold math.</div>
+            <div class="ch-mockwrap reveal" style="--i:1">
+              <div class="panel" role="img" aria-label="A notes panel with a pinned Markdown note and a second plain note, each keyed to a URL.">
+                <div class="panel-head">
+                  <span class="ttl">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--panel-clay))" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v5h5"/><path d="M5 3h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+                    Notes
+                  </span>
+                  <span class="meta tnum">1 pinned</span>
                 </div>
-                <div class="note">
-                  <div class="nh"><span class="url">github.com/quarto/issues/214</span>
-                    <span class="pin"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M14 2l8 8-3 1-4 4v5l-2-2-4 4-1-1 4-4-2-2H7l4-4 1-3z"/></svg></span>
+                <div class="panel-body">
+                  <div class="note pinned">
+                    <div class="nh"><span class="url">developer.mozilla.org/.../IntersectionObserver</span>
+                      <span class="pin"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2l8 8-3 1-4 4v5l-2-2-4 4-1-1 4-4-2-2H7l4-4 1-3z"/></svg></span>
+                    </div>
+                    <div class="ntext">Use <code>rootMargin</code> to pre-load. <b>Stopped at</b> the stagger section, revisit threshold math.</div>
                   </div>
-                  <div class="ntext">Repro needs Chrome 116. Ask about the alarm edge case before closing.</div>
+                  <div class="note">
+                    <div class="nh"><span class="url">github.com/quarto/issues/214</span>
+                      <span class="pin" style="color:rgb(var(--panel-fnt))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M14 2l8 8-3 1-4 4v5l-2-2-4 4-1-1 4-4-2-2H7l4-4 1-3z"/></svg></span>
+                    </div>
+                    <div class="ntext">Repro needs Chrome 116. Ask about the alarm edge case before closing.</div>
+                  </div>
                 </div>
               </div>
             </div>
           </article>
+        </div>
 
+        <!-- also bound in -->
+        <div class="bound-strip reveal">
+          <span class="label">Also bound in</span>
+          <ul>
+            <li><kbd>⌘K</kbd> command palette across every tab</li>
+            <li>Editable snooze presets</li>
+            <li>Light and dark, following your system</li>
+            <li>One-click JSON export</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <!-- ===================================================== PRIVACY ===== -->
-    <section class="section privacy" id="privacy">
+    <!-- ============================================== endpaper: privacy ===== -->
+    <section class="endpaper" id="privacy" aria-label="Privacy">
       <div class="wrap">
-        <div class="privacy-grid">
+        <div class="end-grid">
           <div class="reveal">
-            <div class="lockmark" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            </div>
-            <span class="eyebrow" style="margin-top:20px">The whole point</span>
-            <h2 class="title">Privacy is not a setting. It is the architecture.</h2>
+            <p class="folio" style="margin:0 0 22px">The endpaper</p>
+            <h2>Privacy is not a setting. It is the architecture.</h2>
             <p class="lede">The cheapest way to keep your browsing private is to never collect it. Quarto has no backend to send anything to. The clustering that feels smart runs in the extension's own service worker, on your machine, and stops there.</p>
 
-            <div class="stats" aria-label="By the numbers">
-              <div class="s"><b class="tnum" data-count="0">0</b><span>remote APIs</span></div>
-              <div class="s"><b class="tnum" data-count="0">0</b><span>trackers</span></div>
-              <div class="s"><b class="tnum" data-count="0">0</b><span>bytes synced</span></div>
-              <div class="s"><b class="tnum" data-count="100" data-suffix="%">0%</b><span>on your device</span></div>
+            <div class="ledger" aria-label="The accounting">
+              <div class="ledger-row"><span class="k">Remote APIs</span><span class="v">none</span></div>
+              <div class="ledger-row"><span class="k">Trackers and analytics</span><span class="v">none</span></div>
+              <div class="ledger-row"><span class="k">Bytes synced to a server</span><span class="v tnum">0</span></div>
+              <div class="ledger-row"><span class="k">Where your data lives</span><span class="v clay">on your device</span></div>
             </div>
           </div>
 
           <ul class="guarantees reveal" style="--i:1">
             <li>
-              <span class="check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
-              <div><div class="g-t">No remote APIs</div><div class="g-d">All clustering and scoring runs locally in the service worker. No model server, no inference call.</div></div>
+              <div class="g-t"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No content scripts on your pages</div>
+              <div class="g-d">Quarto reads only the tab metadata Chrome already exposes: URL, title, group id, color. It never touches page content.</div>
             </li>
             <li>
-              <span class="check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
-              <div><div class="g-t">No content scripts on your pages</div><div class="g-d">Quarto reads only the tab metadata Chrome already exposes: URL, title, group id, color. It never touches page content.</div></div>
+              <div class="g-t"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No account, no mirror</div>
+              <div class="g-d">Storage stays in <code>chrome.storage.local</code> and is never copied across devices. There is nothing to log into and nothing to leak.</div>
             </li>
             <li>
-              <span class="check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
-              <div><div class="g-t">No analytics, no telemetry, no sync</div><div class="g-d">There is no account and no tracking. Storage stays in <code>chrome.storage.local</code> and is never mirrored across devices.</div></div>
+              <div class="g-t"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>One optional outbound request, documented</div>
+              <div class="g-d">Site icons load from Google's public favicon service. They are decorative. Block that domain and nothing else breaks.</div>
             </li>
             <li>
-              <span class="check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
-              <div><div class="g-t">One optional outbound request, documented</div><div class="g-d">Site icons load from Google's public favicon service. They are decorative. Block that domain and nothing else breaks.</div></div>
-            </li>
-            <li>
-              <span class="check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
-              <div><div class="g-t">Your data, your call</div><div class="g-d">Export everything to JSON, re-import it, or wipe it permanently from the Options page at any time.</div></div>
+              <div class="g-t"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Your data, your call</div>
+              <div class="g-d">Export everything to JSON, re-import it, or wipe it permanently from the Options page at any time.</div>
             </li>
           </ul>
         </div>
       </div>
     </section>
 
-    <!-- ===================================================== SURFACES ===== -->
-    <section class="section" id="surfaces">
+    <!-- ============================================== surfaces ===== -->
+    <section class="part" id="surfaces" aria-label="Surfaces">
       <div class="wrap">
-        <div class="section-head reveal">
-          <span class="eyebrow">Three surfaces</span>
-          <h2 class="title">One system, wherever you reach for it.</h2>
+        <div class="part-head reveal">
+          <p class="folio" style="margin:0">Three reaches</p>
+          <h2>One system, wherever you reach for it.</h2>
           <p class="lede">Side panel, popup, and options share one keyboard-friendly design language. Light and dark follow your system by default.</p>
         </div>
 
-        <div class="surfaces-grid">
-          <div class="surface-card reveal">
+        <div class="spread">
+          <div class="surf reveal">
             <div class="viz" aria-hidden="true">
-              <div class="v-panel">
-                <div class="v-row w70"></div><div class="v-row w50"></div>
-                <div style="height:1px;background:rgb(var(--border));margin:8px 0"></div>
-                <div class="v-row v-accent w85"></div><div class="v-row w40"></div>
+              <div class="sk-panel" style="right:18px; top:16px; bottom:-12px; width:46%">
+                <div class="sk-row" style="width:62%"></div>
+                <div class="sk-row clay" style="width:84%"></div>
+                <div class="sk-row" style="width:48%"></div>
+                <div class="sk-row" style="width:70%"></div>
               </div>
-              <div class="v-row w50" style="margin-top:6px"></div>
-              <div class="v-row w70"></div>
-              <div class="v-row w40"></div>
+              <div class="sk-panel" style="left:18px; top:38px; width:38%; opacity:.45; background:transparent; border-style:dashed">
+                <div class="sk-row" style="width:80%; opacity:.6"></div>
+                <div class="sk-row" style="width:55%; opacity:.6"></div>
+              </div>
             </div>
             <div class="cap">
               <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>Side panel</h4>
@@ -1055,34 +1030,31 @@
             </div>
           </div>
 
-          <div class="surface-card reveal" style="--i:1">
+          <div class="surf reveal" style="--i:1">
             <div class="viz" aria-hidden="true">
-              <div class="v-pop">
-                <div class="v-row w70"></div>
-                <div class="v-row w85"></div>
-                <div class="v-row v-accent w50" style="margin-top:10px;height:11px"></div>
+              <div class="sk-panel" style="left:50%; transform:translateX(-50%); top:24px; width:64%">
+                <div class="sk-row" style="width:70%"></div>
+                <div class="sk-row" style="width:88%"></div>
+                <span class="sk-chip clay" style="width:64px"></span>
               </div>
             </div>
             <div class="cap">
               <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3"/><rect x="4" y="6" width="16" height="13" rx="2"/></svg>Popup</h4>
-              <p>Quick capture from the toolbar. Jot a note, set a reminder, accept a hint, and get back to work.</p>
+              <p>Quick capture from the toolbar. Jot a note, set a reminder, and get back to work.</p>
             </div>
           </div>
 
-          <div class="surface-card reveal" style="--i:2">
+          <div class="surf reveal" style="--i:2">
             <div class="viz" aria-hidden="true">
-              <div style="position:absolute;inset:14px;border-radius:9px;background:rgb(var(--surface));border:1px solid rgb(var(--border));padding:12px">
-                <div class="v-row w40"></div>
-                <div style="display:flex;gap:8px;margin-top:10px">
-                  <span class="v-chip" style="width:54px"></span><span class="v-chip" style="width:38px"></span>
-                </div>
-                <div class="v-row w85" style="margin-top:6px"></div>
-                <div class="v-row w70"></div>
-                <div style="display:flex;gap:8px;margin-top:12px"><span class="v-chip v-accent" style="width:70px;height:22px"></span></div>
+              <div class="sk-panel" style="inset:20px 18px -8px">
+                <div class="sk-row" style="width:34%"></div>
+                <span class="sk-chip" style="width:52px"></span><span class="sk-chip" style="width:38px"></span>
+                <div class="sk-row" style="width:78%"></div>
+                <span class="sk-chip clay" style="width:70px; height:20px"></span>
               </div>
             </div>
             <div class="cap">
-              <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 6.6 19a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H2a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 3.7 6.6a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V2a2 2 0 1 1 4 0v.1A1.6 1.6 0 0 0 17.4 5l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.5z"/></svg>Options</h4>
+              <h4><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 6.6 19a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H2a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 3.7 6.6a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V2a2 2 0 1 1 4 0v.1A1.6 1.6 0 0 0 17.4 5l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.5z"/></svg>Options</h4>
               <p>The full settings room. Thresholds, snooze presets, theme, and one button to export or wipe everything.</p>
             </div>
           </div>
@@ -1090,45 +1062,45 @@
       </div>
     </section>
 
-    <!-- ===================================================== FAQ ===== -->
-    <section class="section" id="faq" style="border-top:1px solid rgb(var(--border))">
+    <!-- ============================================== FAQ ===== -->
+    <section class="part" id="faq" aria-label="Questions" style="border-top:1px solid rgb(var(--border)); padding-top: clamp(64px, 9vw, 110px)">
       <div class="wrap">
-        <div class="section-head reveal">
-          <span class="eyebrow">Questions</span>
-          <h2 class="title">The things worth asking.</h2>
+        <div class="part-head reveal">
+          <p class="folio" style="margin:0">Questions</p>
+          <h2>The things worth asking.</h2>
         </div>
 
         <div class="faq-list">
-          <div class="faq-item reveal" aria-expanded="false">
-            <h3 style="margin:0">
-              <button class="faq-q" type="button" aria-controls="faq-1">Is my data sent anywhere?
+          <div class="faq-item reveal">
+            <h3 style="margin:0; font-size:inherit">
+              <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-1">Is my data sent anywhere?
                 <span class="pm" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
               </button>
             </h3>
             <div class="faq-a" id="faq-1" role="region"><div><p>No. Quarto has no backend, no analytics, and no telemetry. Your notes, reminders, and settings live in <code>chrome.storage.local</code> on your machine. The only outbound request is to Google's public favicon service to draw site icons, and it carries nothing but the domain. Block it and every other feature still works.</p></div></div>
           </div>
 
-          <div class="faq-item reveal" aria-expanded="false">
-            <h3 style="margin:0">
-              <button class="faq-q" type="button" aria-controls="faq-2">Does it work offline?
+          <div class="faq-item reveal">
+            <h3 style="margin:0; font-size:inherit">
+              <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-2">Does it work offline?
                 <span class="pm" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
               </button>
             </h3>
             <div class="faq-a" id="faq-2" role="region"><div><p>Yes. Grouping, scoring, notes, and reminders all run locally, so they work with no connection at all. The only thing that needs the network is fetching site icons, and those are purely decorative.</p></div></div>
           </div>
 
-          <div class="faq-item reveal" aria-expanded="false">
-            <h3 style="margin:0">
-              <button class="faq-q" type="button" aria-controls="faq-3">Will it reorganize my tabs automatically?
+          <div class="faq-item reveal">
+            <h3 style="margin:0; font-size:inherit">
+              <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-3">Will it reorganize my tabs automatically?
                 <span class="pm" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
               </button>
             </h3>
             <div class="faq-a" id="faq-3" role="region"><div><p>Never without you. Suggestions are suggestions. Quarto surfaces an idea and waits. A group is created, a tab is filed, or a reminder is set only after an explicit click. You can dismiss anything, and it will not nag.</p></div></div>
           </div>
 
-          <div class="faq-item reveal" aria-expanded="false">
-            <h3 style="margin:0">
-              <button class="faq-q" type="button" aria-controls="faq-4">What permissions does it need, and why?
+          <div class="faq-item reveal">
+            <h3 style="margin:0; font-size:inherit">
+              <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-4">What permissions does it need, and why?
                 <span class="pm" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
               </button>
             </h3>
@@ -1138,27 +1110,30 @@
       </div>
     </section>
 
-    <!-- ===================================================== FINAL CTA ===== -->
-    <section class="section cta-band" id="install">
-      <div class="wrap">
-        <div class="cta-inner reveal">
-          <svg class="grain" width="100%" height="100%" aria-hidden="true"><filter id="grain2"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#grain2)"/></svg>
-          <h2>Bring order to the noise. Quietly.</h2>
-          <p>Add Quarto and let the tab strip become something you can think with. It runs on your machine, and it waits for your click.</p>
-          <div class="acts">
-            <a class="btn btn-primary" href="#" data-cta="final">
-              <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              Add to Chrome
-            </a>
-            <a class="btn btn-ghost" href="#features">See how it works</a>
-          </div>
-          <p class="fine">Requires Chrome 116 or newer. Free. No account.</p>
+    <!-- ============================================== closing ===== -->
+    <section class="close-cta" id="install" aria-label="Install" style="border-top:1px solid rgb(var(--border))">
+      <div class="wrap reveal">
+        <svg class="mark-lg" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="6" y="5" width="9" height="9" rx="2" fill="currentColor" opacity=".16"/>
+          <rect x="17" y="5" width="9" height="9" rx="2" fill="currentColor" opacity=".16"/>
+          <rect x="6" y="16" width="9" height="9" rx="2" fill="currentColor" opacity=".16"/>
+          <rect x="17" y="16" width="10" height="10" rx="2.5" fill="rgb(var(--accent))"/>
+        </svg>
+        <h2>Bring order to the noise. Quietly.</h2>
+        <p>Add Quarto and let the tab strip become something you can think with. It runs on your machine, and it waits for your click.</p>
+        <div class="acts">
+          <a class="btn btn-primary" href="#" data-cta="final" data-magnetic>
+            <svg class="chrome-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v6M21 7l-6 1M5 18.5l4-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Add to Chrome
+          </a>
+          <a class="btn btn-ghost" href="#chapters">Read the chapters</a>
         </div>
+        <p class="fine">Requires Chrome 116 or newer. Free. No account.</p>
       </div>
     </section>
   </main>
 
-  <!-- ===================================================== FOOTER ===== -->
+  <!-- ============================================== colophon ===== -->
   <footer class="site">
     <div class="wrap">
       <div class="foot">
@@ -1172,10 +1147,10 @@
         <div>
           <h5>Product</h5>
           <ul>
-            <li><a href="#features">Features</a></li>
+            <li><a href="#chapters">Chapters</a></li>
             <li><a href="#privacy">Privacy</a></li>
             <li><a href="#surfaces">Surfaces</a></li>
-            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#faq">Questions</a></li>
           </ul>
         </div>
         <div>
@@ -1187,9 +1162,9 @@
           </ul>
         </div>
       </div>
-      <div class="foot-bottom">
-        <span>© <span class="tnum">2026</span> Quarto. All rights reserved.</span>
-        <span class="made"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> Built to keep your browsing yours.</span>
+      <div class="colophon">
+        <span class="set">Set in Literata on warm paper. This page carries no analytics; neither does the extension.</span>
+        <span>© <span class="tnum">2026</span> Quarto</span>
       </div>
     </div>
   </footer>
@@ -1200,14 +1175,7 @@
     var root = document.documentElement;
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    /* -------- theme: explicit choice persists; otherwise follow system -------- */
-    var stored = null;
-    try { stored = localStorage.getItem("quarto-theme"); } catch (e) {}
-    if (stored === "light" || stored === "dark") {
-      root.setAttribute("data-theme", stored);
-    } else {
-      root.removeAttribute("data-theme"); /* let the media query decide */
-    }
+    /* ---- theme: explicit choice persists; otherwise follow system ---- */
     function currentTheme() {
       var t = root.getAttribute("data-theme");
       if (t) return t;
@@ -1223,94 +1191,94 @@
       syncToggle();
     });
 
-    /* -------- header backdrop on scroll -------- */
+    /* ---- header hairline on scroll ---- */
     var header = document.querySelector("header.site");
-    var onScroll = function () {
+    function onScroll() {
       if (window.scrollY > 8) header.classList.add("scrolled");
       else header.classList.remove("scrolled");
-    };
+    }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    /* -------- scroll reveal -------- */
-    var revealables = document.querySelectorAll(".reveal");
-    if (reduce || !("IntersectionObserver" in window)) {
-      revealables.forEach(function (el) { el.classList.add("in"); });
-    } else {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+    /* ---- reveal on scroll ---- */
+    var revealed = document.querySelectorAll(".reveal");
+    if ("IntersectionObserver" in window && !reduce) {
+      var ro = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("shown"); ro.unobserve(e.target); }
         });
-      }, { rootMargin: "0px 0px -10% 0px", threshold: 0.12 });
-      revealables.forEach(function (el) { io.observe(el); });
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+      revealed.forEach(function (el) { ro.observe(el); });
+    } else {
+      revealed.forEach(function (el) { el.classList.add("shown"); });
     }
 
-    /* -------- count-up for honest numbers -------- */
-    var counters = document.querySelectorAll("[data-count]");
-    function runCount(el) {
-      var target = parseInt(el.getAttribute("data-count"), 10) || 0;
-      var suffix = el.getAttribute("data-suffix") || "";
-      if (reduce || target === 0) { el.textContent = target + suffix; return; }
-      var start = performance.now(), dur = 1100;
-      function step(now) {
-        var p = Math.min(1, (now - start) / dur);
-        var eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(target * eased) + suffix;
-        if (p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-    if (!("IntersectionObserver" in window)) {
-      counters.forEach(runCount);
-    } else {
-      var cio = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) { runCount(en.target); cio.unobserve(en.target); }
+    /* ---- chapter demos play when seen ---- */
+    var demos = document.querySelectorAll(".panel.watch");
+    if ("IntersectionObserver" in window && !reduce) {
+      var demoObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("in-view"); demoObs.unobserve(e.target); }
         });
-      }, { threshold: 0.6 });
-      counters.forEach(function (el) { cio.observe(el); });
+      }, { threshold: 0.45 });
+      demos.forEach(function (el) { demoObs.observe(el); });
+    } else {
+      demos.forEach(function (el) { el.classList.add("in-view"); });
     }
 
-    /* -------- FAQ accordion -------- */
-    document.querySelectorAll(".faq-item").forEach(function (item) {
-      var btn = item.querySelector(".faq-q");
-      var panel = item.querySelector(".faq-a");
-      btn.setAttribute("aria-expanded", "false");
-      if (panel.id) btn.setAttribute("aria-controls", panel.id);
+    /* ---- replay buttons ---- */
+    document.querySelectorAll("[data-replay]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var open = item.getAttribute("aria-expanded") === "true";
-        item.setAttribute("aria-expanded", String(!open));
-        btn.setAttribute("aria-expanded", String(!open));
+        var panel = btn.parentElement.querySelector(".panel");
+        panel.classList.remove("in-view");
+        void panel.offsetWidth; /* restart transitions */
+        panel.classList.add("in-view");
       });
     });
 
-    /* -------- reminder picker (mock interactivity) -------- */
-    var rpWrap = document.querySelector(".rem-pills");
-    if (rpWrap) {
-      var resolved = document.querySelector(".rem-resolved .tnum");
-      var times = { "1h": "1:30 PM", "3h": "4:30 PM", "Tomorrow": "9:00 AM", "Next week": "Mon 9:00 AM" };
-      rpWrap.querySelectorAll(".rp").forEach(function (rp) {
-        rp.addEventListener("click", function () {
-          rpWrap.querySelectorAll(".rp").forEach(function (o) { o.classList.remove("sel"); o.removeAttribute("aria-pressed"); });
-          rp.classList.add("sel"); rp.setAttribute("aria-pressed", "true");
-          if (resolved && times[rp.textContent]) resolved.textContent = times[rp.textContent];
+    /* ---- the fold: gentle pointer tilt ---- */
+    var fold = document.getElementById("fold");
+    if (fold && !reduce && window.matchMedia("(pointer: fine)").matches) {
+      var scene = fold.closest(".fold-scene");
+      var raf = null;
+      scene.addEventListener("pointermove", function (ev) {
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = null;
+          var r = fold.getBoundingClientRect();
+          var dx = (ev.clientX - (r.left + r.width / 2)) / r.width;
+          var dy = (ev.clientY - (r.top + r.height / 2)) / r.height;
+          fold.style.setProperty("--ry", (dx * 7).toFixed(2) + "deg");
+          fold.style.setProperty("--rx", (dy * -7).toFixed(2) + "deg");
         });
+      });
+      scene.addEventListener("pointerleave", function () {
+        fold.style.setProperty("--rx", "0deg");
+        fold.style.setProperty("--ry", "0deg");
       });
     }
 
-    /* -------- subtle hero spotlight (pointer:fine, motion allowed only) -------- */
-    if (!reduce && window.matchMedia("(pointer:fine)").matches) {
-      var hero = document.querySelector(".hero");
-      var spot = document.querySelector(".hero-bg .spot");
-      if (hero && spot) {
-        hero.addEventListener("pointermove", function (e) {
-          var r = hero.getBoundingClientRect();
-          spot.style.setProperty("--mx", (e.clientX - r.left) + "px");
-          spot.style.setProperty("--my", (e.clientY - r.top) + "px");
+    /* ---- magnetic primary CTAs ---- */
+    if (!reduce && window.matchMedia("(pointer: fine)").matches) {
+      document.querySelectorAll("[data-magnetic]").forEach(function (el) {
+        el.addEventListener("pointermove", function (ev) {
+          var r = el.getBoundingClientRect();
+          var dx = (ev.clientX - (r.left + r.width / 2)) / r.width;
+          var dy = (ev.clientY - (r.top + r.height / 2)) / r.height;
+          el.style.transform = "translate(" + (dx * 4).toFixed(1) + "px," + (dy * 3).toFixed(1) + "px)";
         });
-      }
+        el.addEventListener("pointerleave", function () { el.style.transform = ""; });
+      });
     }
 
+    /* ---- FAQ ---- */
+    document.querySelectorAll(".faq-item").forEach(function (item) {
+      var btn = item.querySelector(".faq-q");
+      btn.addEventListener("click", function () {
+        var open = item.classList.toggle("open");
+        btn.setAttribute("aria-expanded", String(open));
+      });
+    });
   })();
   </script>
 </body>
