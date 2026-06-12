@@ -17,11 +17,25 @@
 
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="6" y="5" width="9" height="9" rx="2" fill="%23978f87"/><rect x="17" y="5" width="9" height="9" rx="2" fill="%23978f87"/><rect x="6" y="16" width="9" height="9" rx="2" fill="%23978f87"/><rect x="17" y="16" width="10" height="10" rx="2.5" fill="%23c16338"/></svg>' />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet" />
+  <link rel="preload" href="fonts/literata-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/literata-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
 
   <style>
+  /* Literata, self-hosted: the page makes no external requests at all */
+  @font-face {
+    font-family: 'Literata';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url(fonts/literata-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Literata';
+    font-style: italic;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url(fonts/literata-italic-latin.woff2) format('woff2');
+  }
   /* ================================================================
      Quarto · landing
      A fine-press book about your browser. Warm paper, ink, one clay
