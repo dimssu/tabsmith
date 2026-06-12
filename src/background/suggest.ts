@@ -166,7 +166,7 @@ export async function applySuggestion(
       return { ok: true, appliedTo: groupId };
     }
   } catch (err) {
-    console.warn("[tabsmith] failed to apply suggestion", err);
+    console.warn("[quarto] failed to apply suggestion", err);
     return { ok: false };
   }
   return { ok: false };

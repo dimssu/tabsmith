@@ -127,7 +127,7 @@ export function CommandPalette({ open, onClose, windowId }: Props) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Tabsmith command palette"
+      aria-label="Quarto command palette"
       className="fixed inset-0 z-50 flex items-start justify-center pt-10 px-3
         bg-black/30 backdrop-blur-[2px] animate-fade-in"
       onClick={onClose}

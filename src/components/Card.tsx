@@ -3,7 +3,7 @@ import { cn } from "@/shared/utils";
 
 /**
  * Used sparingly — only when content is genuinely a bounded unit. Most
- * lists in Tabsmith should render flat with hairline dividers, not as
+ * lists in Quarto should render flat with hairline dividers, not as
  * card grids. Decorative backdrop-blur was removed in the rebrand.
  */
 export function Card({

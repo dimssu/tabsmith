@@ -113,4 +113,4 @@ export type Broadcast =
   | { type: "groups:changed" }
   | { type: "palette:open" };
 
-export const BROADCAST_CHANNEL = "tabsmith-broadcast";
+export const BROADCAST_CHANNEL = "quarto-broadcast";

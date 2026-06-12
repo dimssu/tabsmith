@@ -1,4 +1,4 @@
-# Tabsmith — Product context
+# Quarto — Product context
 
 **register: product**
 
@@ -19,13 +19,14 @@ suggested group. The design serves the task.
   notice when affordances are subtly off.
 
 The user is sitting at a 13–16" laptop in normal office or home light, juggling
-work across many tabs. They glance at Tabsmith. They expect it to read fast and
+work across many tabs. They glance at Quarto. They expect it to read fast and
 behave predictably. Theme follows system by default — the tab strip is usually
 light, jarring switches feel wrong.
 
 ## Brand
 
-**Tabsmith** = smith, craftsperson, forge. A considered tool for the noise of
+**Quarto** = the bookmaking format: one sheet folded into four leaves. Loose
+pages, bound into something you can hold. A considered tool for the noise of
 modern browsing. Hand-finished, deliberate, quiet. Not productivity-SaaS.
 
 - Voice: dry, precise, occasionally warm. Never breathless, never cute, never
@@ -38,7 +39,7 @@ modern browsing. Hand-finished, deliberate, quiet. Not productivity-SaaS.
 
 ## Tone
 
-- "Why did I open this? Where did I stop?" — the questions a Tabsmith note
+- "Why did I open this? Where did I stop?" — the questions a Quarto note
   should answer for you.
 - "Suggestions are suggestions." — never auto-applies.
 - "0 reminders waiting for you" / "1 reminder waiting for you" — say things the
@@ -48,13 +49,13 @@ No em dashes anywhere in UI copy.
 
 ## Anti-references
 
-These are the reflexes Tabsmith deliberately avoids:
+These are the reflexes Quarto deliberately avoids:
 
 - **Generic productivity SaaS** (purple/indigo accent, rounded squircle logo,
   motivational empty states). The single most common look-and-feel for tab
   managers; we won't ship that.
 - **AI-flavored "smart" framing** (sparkles, gradient headers, breathless
-  microcopy). Tabsmith does small local heuristics, not magic. The UI should
+  microcopy). Quarto does small local heuristics, not magic. The UI should
   not pretend otherwise.
 - **Eco / green-leaf privacy framing** (the second-order reflex once you avoid
   purple). Privacy here is communicated by quiet structural decisions, not by

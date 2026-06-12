@@ -1,6 +1,6 @@
-# Tabsmith — Architecture
+# Quarto — Architecture
 
-Tabsmith is a Manifest V3 Chrome extension that organizes a noisy tab strip into
+Quarto is a Manifest V3 Chrome extension that organizes a noisy tab strip into
 labeled groups, holds time-based reminders, and attaches per-URL notes. Phase 1
 runs entirely on the user's machine: no remote APIs, no telemetry, no
 cross-device sync.

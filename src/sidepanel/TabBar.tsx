@@ -23,7 +23,7 @@ export function TabBar({ active, onChange, counts }: Props) {
   return (
     <div
       role="tablist"
-      aria-label="Tabsmith sections"
+      aria-label="Quarto sections"
       className="flex items-end gap-5 px-4 border-b border-border bg-surface sticky top-[72px] z-10"
     >
       {TABS.map(({ key, label }) => {

@@ -1,8 +1,8 @@
-# Tabsmith
+# Quarto
 
 > Smart, private tab grouping, reminders, and contextual notes — fully on-device.
 
-Tabsmith is a Manifest V3 Chrome extension that brings order to a noisy tab
+Quarto is a Manifest V3 Chrome extension that brings order to a noisy tab
 strip. It quietly clusters related tabs, suggests where new ones belong, holds
 time-based reminders that fire even after you've closed a tab, and keeps a
 short note per URL so the context you built up doesn't evaporate the next time
@@ -19,11 +19,11 @@ anywhere — see the [Privacy](#privacy) section.
 - **Smart group suggestions** — domain bucketing plus a token-similarity merge
   pass surfaces "5 tabs from github.com — group them?" without thrashing your
   workflow.
-- **Add-to-existing-group hints** — open a new tab and Tabsmith scores it
+- **Add-to-existing-group hints** — open a new tab and Quarto scores it
   against your live tab groups. If it's a confident match, you get a one-click
   prompt in the side panel.
 - **Tab reminders** — pick `1h` / `3h` / Tomorrow / Next week. The reminder
-  fires even if you closed the tab; on click, Tabsmith reopens it.
+  fires even if you closed the tab; on click, Quarto reopens it.
 - **Per-URL notes** — short Markdown-friendly notes keyed by a normalized URL
   (utm params, www, trailing slash all stripped). Pinning keeps a note at
   the top of the list.
@@ -42,7 +42,7 @@ Then in Chrome:
 1. Open `chrome://extensions`
 2. Enable **Developer mode** (top right).
 3. Click **Load unpacked** and pick the `dist/` folder.
-4. Pin Tabsmith from the puzzle-piece icon, then click it to open the side panel.
+4. Pin Quarto from the puzzle-piece icon, then click it to open the side panel.
 
 Requires Chrome 116 or newer (for `chrome.sidePanel`).
 
@@ -81,7 +81,7 @@ recipes live in [TESTING.md](./TESTING.md).
 
 ## Privacy
 
-Tabsmith is built so that nothing about your tabs can leak. Concretely:
+Quarto is built so that nothing about your tabs can leak. Concretely:
 
 - **No remote APIs.** All clustering and scoring happens locally in the
   service worker. There is no model server, no analytics endpoint, no

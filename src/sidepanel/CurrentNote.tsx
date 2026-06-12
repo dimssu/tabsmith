@@ -77,7 +77,7 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
       <EmptyState
         icon={<StickyNote width={18} height={18} />}
         title="Notes are for the open web"
-        body="Tabsmith doesn't track notes on chrome:// or extension pages. Open a regular website to leave a note."
+        body="Quarto doesn't track notes on chrome:// or extension pages. Open a regular website to leave a note."
       />
     );
   }
@@ -134,7 +134,7 @@ export function CurrentNote({ tab, loading, onChanged }: Props) {
             onClick={() => setReadMode(false)}
             className="w-full min-h-[160px] px-3.5 py-3 text-sm leading-relaxed
               bg-surface-muted border border-border rounded-md text-left
-              prose-tabsmith hover:border-border-strong transition-colors duration-160
+              prose-quarto hover:border-border-strong transition-colors duration-160
               cursor-text outline-none focus-visible:focus-ring"
             aria-label="Edit note"
             // Markdown renderer escapes input + only emits known-safe tags;

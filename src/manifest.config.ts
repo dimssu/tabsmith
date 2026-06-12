@@ -2,14 +2,14 @@ import { defineManifest } from "@crxjs/vite-plugin";
 
 export default defineManifest({
   manifest_version: 3,
-  name: "Tabsmith",
+  name: "Quarto",
   description:
     "Smart, private tab grouping, reminders, and contextual notes — fully on-device.",
-  version: "0.1.0",
+  version: "0.1.1",
   minimum_chrome_version: "116",
   action: {
     default_popup: "src/popup/index.html",
-    default_title: "Tabsmith",
+    default_title: "Quarto",
   },
   side_panel: {
     default_path: "src/sidepanel/index.html",
@@ -32,7 +32,7 @@ export default defineManifest({
   commands: {
     "open-command-palette": {
       suggested_key: { default: "Ctrl+K", mac: "Command+K" },
-      description: "Open Tabsmith command palette",
+      description: "Open Quarto command palette",
     },
   },
   host_permissions: ["<all_urls>"],

@@ -1,4 +1,4 @@
-# Tabsmith — Design system
+# Quarto — Design system
 
 A compact reference for the visual language. The Tailwind config wires these
 tokens; CSS variables in `src/styles/tokens.css` define the theme.
@@ -8,7 +8,7 @@ tokens; CSS variables in `src/styles/tokens.css` define the theme.
 Theme follows the OS by default. Users can override to Light or Dark in Options.
 
 The "physical scene": a knowledge worker glances at the side panel docked
-beside a typical web page. The tab strip and most pages are light. Tabsmith is
+beside a typical web page. The tab strip and most pages are light. Quarto is
 quiet enough to live alongside either light or dark contexts without yanking
 attention.
 
@@ -131,7 +131,7 @@ The mark is a stacked-tabs glyph: two slightly offset rounded-rect "tabs"
 forming a T shape, with a hairline base bar suggesting a work surface. Drawn
 on a 32×32 grid, 1.5px effective stroke at 32px.
 
-Wordmark: "Tabsmith" in the base sans, weight 600, tracking -0.012em. The dot
+Wordmark: "Quarto" in the base sans, weight 600, tracking -0.012em. The dot
 on the "i" is replaced with the clay accent disc at small sizes.
 
 Both available as a single React component (`<Logo />`) with `size` and
@@ -152,6 +152,6 @@ Both available as a single React component (`<Logo />`) with `size` and
 - Glassmorphism / decorative backdrop blur.
 - Hero-metric template (big number + small label + accent).
 - Identical card grids.
-- Modals as first thought (no modals at all in Tabsmith Phase 1).
+- Modals as first thought (no modals at all in Quarto Phase 1).
 - Display fonts in UI.
 - Decorative motion.

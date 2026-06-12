@@ -10,7 +10,7 @@ import { GroupMetaRepo, SuggestionsRepo } from "@/storage";
 import { broadcast } from "@/messaging/client";
 
 const ANALYZE_DEBOUNCE_MS = 1500;
-const FULL_ANALYZE_ALARM = "tabsmith:full-analyze";
+const FULL_ANALYZE_ALARM = "quarto:full-analyze";
 
 installRouter();
 

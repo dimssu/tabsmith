@@ -48,7 +48,7 @@ export function SuggestionsList({ data, loading, onRefresh, onAnalyze }: Props) 
       <EmptyState
         icon={<Layers width={20} height={20} />}
         title="No suggestions"
-        body="Open a few related tabs and Tabsmith will quietly cluster them. Nothing is auto-applied; every group needs your one-click confirm."
+        body="Open a few related tabs and Quarto will quietly cluster them. Nothing is auto-applied; every group needs your one-click confirm."
         hint={
           <button
             onClick={onAnalyze}

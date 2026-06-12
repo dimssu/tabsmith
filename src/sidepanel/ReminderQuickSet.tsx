@@ -56,8 +56,8 @@ export function ReminderQuickSet({ url, titleHint, onCreated }: Props) {
         type: "reminders:create",
         url,
         fireAt: Date.now() + 10_000,
-        ...(titleHint ? { titleHint: `[Test] ${titleHint}` } : { titleHint: "[Test] Tabsmith demo reminder" }),
-        note: "This is a test reminder so you can see how Tabsmith notifies you. The Snooze buttons on this notification really work.",
+        ...(titleHint ? { titleHint: `[Test] ${titleHint}` } : { titleHint: "[Test] Quarto demo reminder" }),
+        note: "This is a test reminder so you can see how Quarto notifies you. The Snooze buttons on this notification really work.",
       });
       onCreated?.();
       // Live countdown so it's obvious something is in flight.
@@ -133,7 +133,7 @@ export function ReminderQuickSet({ url, titleHint, onCreated }: Props) {
           disabled={busy || testCountdown !== null}
           className="text-[11px] text-ink-muted hover:text-ink inline-flex items-center gap-1.5
             disabled:opacity-60 disabled:hover:text-ink-muted transition-colors"
-          title="Schedule a reminder 10 seconds from now to see how Tabsmith notifies you"
+          title="Schedule a reminder 10 seconds from now to see how Quarto notifies you"
         >
           <span aria-hidden>⏱</span>
           {testCountdown === null

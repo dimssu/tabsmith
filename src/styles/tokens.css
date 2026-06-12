@@ -156,29 +156,29 @@
 
 @layer components {
   /* Typographic styles for rendered note Markdown. Compact, single column. */
-  .prose-tabsmith :where(p) {
+  .prose-quarto :where(p) {
     margin-bottom: 0.5rem;
     line-height: 1.55;
   }
-  .prose-tabsmith :where(strong) {
+  .prose-quarto :where(strong) {
     font-weight: 600;
   }
-  .prose-tabsmith :where(em) {
+  .prose-quarto :where(em) {
     font-style: italic;
   }
-  .prose-tabsmith :where(code) {
+  .prose-quarto :where(code) {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   }
-  .prose-tabsmith :where(a) {
+  .prose-quarto :where(a) {
     word-break: break-word;
   }
-  .prose-tabsmith :where(ul, ol) {
+  .prose-quarto :where(ul, ol) {
     margin-bottom: 0.5rem;
   }
-  .prose-tabsmith :where(blockquote) {
+  .prose-quarto :where(blockquote) {
     margin: 0.25rem 0 0.5rem;
   }
-  .prose-tabsmith :where(hr) {
+  .prose-quarto :where(hr) {
     margin: 0.5rem 0;
   }
 

@@ -1,6 +1,6 @@
 {
-  "name": "tabsmith",
-  "version": "0.1.0",
+  "name": "quarto",
+  "version": "0.1.1",
   "description": "Privacy-first Chrome extension for smart tab grouping, reminders, and contextual notes.",
   "private": true,
   "type": "module",

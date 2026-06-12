@@ -35,6 +35,6 @@ export async function refreshBadge(): Promise<void> {
       `${pending.length} group suggestion${pending.length === 1 ? "" : "s"}`,
     );
   }
-  const title = titleParts.length > 0 ? `Tabsmith — ${titleParts.join(" · ")}` : "Tabsmith";
+  const title = titleParts.length > 0 ? `Quarto — ${titleParts.join(" · ")}` : "Quarto";
   await chrome.action.setTitle({ title });
 }

@@ -31,7 +31,7 @@ export function installRouter(): void {
     handle(msg as Message)
       .then(sendResponse)
       .catch((err) => {
-        console.warn("[tabsmith] message error", msg, err);
+        console.warn("[quarto] message error", msg, err);
         sendResponse({ error: String(err) });
       });
     return true; // keep channel open for async response

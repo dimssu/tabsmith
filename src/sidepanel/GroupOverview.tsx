@@ -58,7 +58,7 @@ export function GroupOverview({ onChanged }: Props) {
       <EmptyState
         icon={<Layers width={18} height={18} />}
         title="No groups in this window"
-        body="Open Suggestions to let Tabsmith propose a starter set, or group tabs in Chrome — Tabsmith will recognize them automatically."
+        body="Open Suggestions to let Quarto propose a starter set, or group tabs in Chrome — Quarto will recognize them automatically."
       />
     );
   }

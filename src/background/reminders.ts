@@ -94,7 +94,7 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
       : reminder.recurrence && reminder.recurrence !== "none"
         ? `Recurring reminder · ${recurrenceLabel(reminder.recurrence)}`
         : "Time to revisit this tab.";
-  const title = reminder.titleHint?.trim() || "Tabsmith reminder";
+  const title = reminder.titleHint?.trim() || "Quarto reminder";
 
   // Resolve the user's snooze presets once for both surfaces.
   const prefs = await PreferencesRepo.get();
@@ -118,7 +118,7 @@ export async function handleAlarm(alarm: chrome.alarms.Alarm): Promise<void> {
       [`notif:reminder:${id}:presets`]: notificationButtons,
     });
   } catch (err) {
-    console.warn("[tabsmith] OS notification failed", err);
+    console.warn("[quarto] OS notification failed", err);
   }
 
   // 2) In-page banner — inject on whatever tab the user is currently looking
@@ -183,7 +183,7 @@ async function injectBanner(tabId: number, payload: BannerPayload): Promise<bool
   } catch (err) {
     // chrome://, edge://, the web store, and other restricted pages reject
     // scripting injection. Caller can fall back to another tab.
-    console.warn("[tabsmith] banner injection failed", err);
+    console.warn("[quarto] banner injection failed", err);
     return false;
   }
 }

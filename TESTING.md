@@ -1,4 +1,4 @@
-# Tabsmith — Manual test plan
+# Quarto — Manual test plan
 
 The grouping engine is covered by Vitest (`npm run test`). The plan below is
 the manual sweep to run before each release. Allow ~15 minutes end-to-end.
@@ -7,7 +7,7 @@ the manual sweep to run before each release. Allow ~15 minutes end-to-end.
 
 1. `npm run build`
 2. Load `dist/` as an unpacked extension at `chrome://extensions`.
-3. Open the Tabsmith side panel from the action icon.
+3. Open the Quarto side panel from the action icon.
 4. (Optional) Open the options page and set `Idle re-analyze interval` to 30s
    so you don't have to wait long for periodic analysis to fire.
 
@@ -52,7 +52,7 @@ the manual sweep to run before each release. Allow ~15 minutes end-to-end.
 
 1. Set a 1-minute reminder on a tab.
 2. Close the tab.
-3. **Expected:** at fire time, Tabsmith opens a new tab on the same URL and
+3. **Expected:** at fire time, Quarto opens a new tab on the same URL and
    shows the notification.
 
 ### Survive browser restart

@@ -62,7 +62,7 @@ export function App() {
 
         <Section title="Privacy">
           <p className="text-[13px] text-ink-muted leading-relaxed">
-            Tabsmith never sends your tabs, notes, reminders, or preferences anywhere.
+            Quarto never sends your tabs, notes, reminders, or preferences anywhere.
             All processing — clustering, similarity scoring, suggestion ranking —
             runs locally inside the extension's service worker. There is no
             telemetry, no analytics, no remote model. The only network requests
@@ -104,7 +104,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   {
     title: "Smart group suggestions",
     intro:
-      "Tabsmith quietly clusters related tabs and proposes groups in the side panel. Nothing is auto-applied — every group needs one click.",
+      "Quarto quietly clusters related tabs and proposes groups in the side panel. Nothing is auto-applied — every group needs one click.",
     bullets: [
       {
         what: "“New group” suggestions cluster open tabs by domain + title similarity.",
@@ -129,7 +129,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
     bullets: [
       {
         what: "Notes autosave ~350ms after you stop typing. A “saved” pill confirms.",
-        how: "Side panel → Note tab, or click the Tabsmith action icon → Add note.",
+        how: "Side panel → Note tab, or click the Quarto action icon → Add note.",
       },
       {
         what: "Markdown is supported (headings, **bold**, *italic*, `code`, [links](url), lists, > blockquotes, horizontal rules).",
@@ -147,7 +147,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   {
     title: "Tab reminders",
     intro:
-      "Time-based reminders that work even after you close the tab. On fire, Tabsmith reopens it or focuses the existing one.",
+      "Time-based reminders that work even after you close the tab. On fire, Quarto reopens it or focuses the existing one.",
     bullets: [
       {
         what: "Quick presets: 1h, 3h, Tomorrow, Next week.",
@@ -159,7 +159,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
       },
       {
         what: "Snooze from the notification itself: Snooze 1h or Tomorrow buttons.",
-        how: "Both buttons appear on every reminder notification — no need to open Tabsmith to snooze.",
+        how: "Both buttons appear on every reminder notification — no need to open Quarto to snooze.",
       },
       {
         what: "Reminders survive browser restart — Chrome's alarms API persists them.",
@@ -177,7 +177,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   {
     title: "Command palette",
     intro:
-      "One keystroke to find anything Tabsmith knows about.",
+      "One keystroke to find anything Quarto knows about.",
     bullets: [
       {
         what: "Open the palette with ⌘K (mac) or Ctrl+K (Windows/Linux).",
@@ -197,7 +197,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   {
     title: "Group management",
     intro:
-      "Rename and recolor any group in the current window without leaving Tabsmith.",
+      "Rename and recolor any group in the current window without leaving Quarto.",
     bullets: [
       {
         what: "Click a group's color dot to open the swatch picker.",
@@ -211,7 +211,7 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   {
     title: "Popup quick-actions",
     intro:
-      "Click the Tabsmith icon in the toolbar for fast, single-tab actions without opening the side panel.",
+      "Click the Quarto icon in the toolbar for fast, single-tab actions without opening the side panel.",
     bullets: [
       { what: "Add note to this tab — autosaving Markdown editor in a compact view." },
       { what: "Remind me later — same presets and recurrence options as the side panel." },
@@ -220,14 +220,14 @@ const FEATURE_GUIDE: FeatureGroup[] = [
   },
   {
     title: "Customization",
-    intro: "Tune Tabsmith to your style. All preferences below persist locally.",
+    intro: "Tune Quarto to your style. All preferences below persist locally.",
     bullets: [
       {
         what: "Theme: System / Light / Dark.",
         how: "Set in Appearance section below.",
       },
       {
-        what: "Suggestion thresholds: control how confident Tabsmith must be before surfacing a group idea.",
+        what: "Suggestion thresholds: control how confident Quarto must be before surfacing a group idea.",
         how: "Set in Suggestions section below. Higher = fewer but more confident suggestions.",
       },
       {
@@ -253,7 +253,7 @@ function FeatureGuide() {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-[12px] uppercase tracking-[0.08em] text-ink-faint font-semibold">
-          How Tabsmith works
+          How Quarto works
         </h2>
         <div className="flex items-center gap-2 text-[11px] text-ink-faint">
           <button
@@ -473,7 +473,7 @@ function ThemePicker() {
   return (
     <div className="space-y-3">
       <p className="text-[12px] text-ink-faint">
-        Tabsmith follows your system theme by default. Override here if you want
+        Quarto follows your system theme by default. Override here if you want
         a fixed look across the side panel, popup, and options page.
       </p>
       <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-2">
@@ -755,7 +755,7 @@ function DataControls() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `tabsmith-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `quarto-export-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setStatus("Exported");
@@ -783,7 +783,7 @@ function DataControls() {
   };
 
   const onClear = async () => {
-    const ok = window.confirm("Clear all Tabsmith data? Notes, reminders, and preferences will be erased. This cannot be undone.");
+    const ok = window.confirm("Clear all Quarto data? Notes, reminders, and preferences will be erased. This cannot be undone.");
     if (!ok) return;
     await send({ type: "data:clearAll" });
     setStatus("Cleared");

@@ -40,7 +40,7 @@ export function ReminderList({ onChanged }: Props) {
       <EmptyState
         icon={<Bell width={20} height={20} />}
         title="No reminders set"
-        body="Set one from the Note tab. Reminders fire even if you've closed the tab; Tabsmith will reopen it for you."
+        body="Set one from the Note tab. Reminders fire even if you've closed the tab; Quarto will reopen it for you."
       />
     );
   }

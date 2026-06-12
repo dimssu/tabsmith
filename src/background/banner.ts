@@ -22,8 +22,8 @@ export interface BannerPayload {
 // The injected function MUST be serializable for chrome.scripting.executeScript.
 // Don't reference outer-scope variables; everything comes via `args`.
 export function bannerInjector(payload: BannerPayload) {
-  const BANNER_ID = "tabsmith-reminder-banner-v2";
-  const STYLE_ID = "tabsmith-reminder-banner-style-v2";
+  const BANNER_ID = "quarto-reminder-banner-v2";
+  const STYLE_ID = "quarto-reminder-banner-style-v2";
 
   document.getElementById(BANNER_ID)?.remove();
 
@@ -31,11 +31,11 @@ export function bannerInjector(payload: BannerPayload) {
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      @keyframes tabsmith-slide-in {
+      @keyframes quarto-slide-in {
         from { opacity: 0; transform: translateY(-8px); }
         to   { opacity: 1; transform: translateY(0); }
       }
-      @keyframes tabsmith-slide-out {
+      @keyframes quarto-slide-out {
         to { opacity: 0; transform: translateY(-8px); }
       }
     `;
@@ -54,7 +54,7 @@ export function bannerInjector(payload: BannerPayload) {
   root.id = BANNER_ID;
   root.setAttribute("role", "alertdialog");
   root.setAttribute("aria-live", "assertive");
-  root.setAttribute("aria-label", "Tabsmith reminder");
+  root.setAttribute("aria-label", "Quarto reminder");
   Object.assign(root.style, {
     all: "initial",
     position: "fixed",
@@ -64,7 +64,7 @@ export function bannerInjector(payload: BannerPayload) {
     maxWidth: "380px",
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif",
-    animation: "tabsmith-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+    animation: "quarto-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
   });
 
   const card = document.createElement("div");
@@ -88,7 +88,7 @@ export function bannerInjector(payload: BannerPayload) {
     gap: "8px",
     marginBottom: payload.body ? "8px" : "12px",
   });
-  // Small Tabsmith mark — same geometry as the action icon so the brand reads
+  // Small Quarto mark — same geometry as the action icon so the brand reads
   // continuously from chrome's toolbar to the page surface.
   const mark = document.createElement("span");
   mark.setAttribute("aria-hidden", "true");
@@ -102,11 +102,11 @@ export function bannerInjector(payload: BannerPayload) {
   });
   mark.innerHTML =
     '<svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">' +
-    `<path d="M9 5h14a2 2 0 0 1 2 2v3H7V7a2 2 0 0 1 2-2z" fill="${fg}" opacity="0.22"/>` +
-    `<rect x="7" y="9" width="18" height="11" rx="2" fill="${fg}" opacity="0.22"/>` +
-    `<path d="M11 11h10a2 2 0 0 1 2 2v2H9v-2a2 2 0 0 1 2-2z" fill="${accent}"/>` +
-    `<rect x="9" y="14" width="14" height="9" rx="2" fill="${accent}"/>` +
-    `<line x1="5" y1="26.5" x2="27" y2="26.5" stroke="${fg}" stroke-width="1.25" stroke-linecap="round" opacity="0.5"/>` +
+    `<rect x="6" y="5" width="9" height="9" rx="2" fill="${fg}" opacity="0.22"/>` +
+    `<rect x="17" y="5" width="9" height="9" rx="2" fill="${fg}" opacity="0.22"/>` +
+    `<rect x="6" y="16" width="9" height="9" rx="2" fill="${fg}" opacity="0.22"/>` +
+    `<rect x="17" y="16" width="10" height="10" rx="2.5" fill="${accent}"/>` +
+    `<line x1="5" y1="29.5" x2="27" y2="29.5" stroke="${fg}" stroke-width="1.25" stroke-linecap="round" opacity="0.5"/>` +
     "</svg>";
   header.appendChild(mark);
 
@@ -125,7 +125,7 @@ export function bannerInjector(payload: BannerPayload) {
 
   const closeBtn = document.createElement("button");
   closeBtn.setAttribute("aria-label", "Dismiss");
-  closeBtn.setAttribute("data-tabsmith-action", "close");
+  closeBtn.setAttribute("data-quarto-action", "close");
   closeBtn.textContent = "×";
   Object.assign(closeBtn.style, {
     background: "transparent",
@@ -173,7 +173,7 @@ export function bannerInjector(payload: BannerPayload) {
   ) => {
     const b = document.createElement("button");
     b.textContent = label;
-    b.setAttribute("data-tabsmith-action", action);
+    b.setAttribute("data-quarto-action", action);
     Object.assign(b.style, {
       background: opts.primary ? accent : "transparent",
       border: opts.primary ? "0" : `1px solid ${border}`,
@@ -236,7 +236,7 @@ export function bannerInjector(payload: BannerPayload) {
   // Remaining presets (skip the two already in the button row).
   for (const p of payload.presets.slice(2)) {
     const item = document.createElement("button");
-    item.setAttribute("data-tabsmith-action", `snooze-${p.minutes}`);
+    item.setAttribute("data-quarto-action", `snooze-${p.minutes}`);
     Object.assign(item.style, {
       display: "flex",
       justifyContent: "space-between",
@@ -344,7 +344,7 @@ export function bannerInjector(payload: BannerPayload) {
 
   const setBtn = document.createElement("button");
   setBtn.textContent = "Set";
-  setBtn.setAttribute("data-tabsmith-action", "snooze-custom");
+  setBtn.setAttribute("data-quarto-action", "snooze-custom");
   Object.assign(setBtn.style, {
     background: accent,
     border: "0",
@@ -365,7 +365,7 @@ export function bannerInjector(payload: BannerPayload) {
 
   // --- Footer attribution ---------------------------------------------------
   const footer = document.createElement("div");
-  footer.textContent = "tabsmith · reminder";
+  footer.textContent = "quarto · reminder";
   Object.assign(footer.style, {
     color: muted,
     fontSize: "10px",
@@ -380,7 +380,7 @@ export function bannerInjector(payload: BannerPayload) {
   document.documentElement.appendChild(root);
 
   function dismiss() {
-    root.style.animation = "tabsmith-slide-out 180ms ease-out forwards";
+    root.style.animation = "quarto-slide-out 180ms ease-out forwards";
     setTimeout(() => root.remove(), 220);
   }
 
@@ -415,8 +415,8 @@ export function bannerInjector(payload: BannerPayload) {
 
   root.addEventListener("click", (e) => {
     const target = e.target as HTMLElement | null;
-    const actionEl = target?.closest<HTMLElement>("[data-tabsmith-action]");
-    const action = actionEl?.dataset.tabsmithAction;
+    const actionEl = target?.closest<HTMLElement>("[data-quarto-action]");
+    const action = actionEl?.dataset.quartoAction;
     if (!action) return;
 
     if (action === "more") {
